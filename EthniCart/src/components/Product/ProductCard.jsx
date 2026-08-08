@@ -1,4 +1,6 @@
 import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
   FiHeart,
   FiShoppingBag,
@@ -7,8 +9,11 @@ import {
 
 import { CartContext } from "../../context/CartContext";
 import { WishlistContext } from "../../context/WishlistContext";
+import { AuthContext } from "../../context/AuthContext";
 
 const ProductCard = ({ product }) => {
+  const navigate = useNavigate();
+
   // Cart
   const { addToCart } = useContext(CartContext);
 
@@ -19,12 +24,25 @@ const ProductCard = ({ product }) => {
     isInWishlist,
   } = useContext(WishlistContext);
 
+  // Authentication
+  const { user } = useContext(AuthContext);
+
   const liked = isInWishlist(product.id);
 
   // Wishlist button
   const handleWishlist = (e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!user) {
+     navigate("/login", {
+     state: {
+      from: window.location.pathname,
+        },
+     });
+
+      return;
+    }
 
     if (liked) {
       removeFromWishlist(product.id);
@@ -34,13 +52,29 @@ const ProductCard = ({ product }) => {
   };
 
   // Cart button
-  const handleAddToCart = () => {
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // User not logged in
+    if (!user) {
+      navigate("/login", {
+        state: {
+          from: "/shop",
+        },
+      });
+
+      return;
+    }
+
+    // User logged in
     addToCart(product);
+
     alert("Product added to cart!");
   };
 
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+    <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition duration-300">
 
       {/* IMAGE */}
       <div className="relative h-[380px] overflow-hidden bg-gray-100">
@@ -81,6 +115,7 @@ const ProductCard = ({ product }) => {
           className="absolute bottom-4 left-4 right-4 bg-white text-gray-900 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 translate-y-16 group-hover:translate-y-0 transition-transform duration-300 hover:bg-[#C49A6C] hover:text-white"
         >
           <FiShoppingBag size={18} />
+
           Add to Cart
         </button>
 

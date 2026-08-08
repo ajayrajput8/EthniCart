@@ -1,49 +1,123 @@
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 
 import Navbar from "./components/Layout/Navbar";
+
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Product from "./pages/Product";
+
 import Profile from "./components/Home/Profile";
+
 import AdminLogin from "./components/Admin/AdminLogin";
 import AdminLayout from "./components/Admin/AdminLayout";
-import ProtectedRoute from "./components/Admin/ProtectedRoute";
+import AdminProtectedRoute from "./components/Admin/ProtectedRoute";
+
+import UserProtectedRoute from "./components/Auth/ProtectedRoute";
+
 
 const UserLayout = () => {
   return (
     <>
       <Navbar />
-      {/* Outlet renders the matched child route below the Navbar */}
-      <Outlet /> 
+      <Outlet />
     </>
   );
 };
 
+
 function App() {
   return (
     <BrowserRouter>
+
       <Routes>
+
+        {/* ================= USER ROUTES ================= */}
+
         <Route element={<UserLayout />}>
+
+          {/* Public */}
           <Route path="/" element={<Home />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/wishlist" element={<Wishlist />} />
+
           <Route path="/login" element={<Login />} />
-          <Route path="/product/:id" element={<Product />} />
-          <Route path="/profile" element={<Profile />} />
+
+          <Route path="/register" element={<Register />} />
+
+
+          {/* Protected */}
+
+          <Route
+            path="/shop"
+            element={
+              <UserProtectedRoute>
+                <Shop />
+              </UserProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/product/:id"
+            element={
+              <UserProtectedRoute>
+                <Product />
+              </UserProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/cart"
+            element={
+              <UserProtectedRoute>
+                <Cart />
+              </UserProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/wishlist"
+            element={
+              <UserProtectedRoute>
+                <Wishlist />
+              </UserProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <UserProtectedRoute>
+                <Profile />
+              </UserProtectedRoute>
+            }
+          />
+
         </Route>
-        <Route path="/admin" element={<AdminLogin />} />
-        <Route path="/adminpage" element={
-            <ProtectedRoute>
+
+
+        {/* ================= ADMIN ROUTES ================= */}
+
+        <Route
+          path="/admin"
+          element={<AdminLogin />}
+        />
+
+        <Route
+          path="/adminpage"
+          element={
+            <AdminProtectedRoute>
               <AdminLayout />
-            </ProtectedRoute>
-          } />
+            </AdminProtectedRoute>
+          }
+        />
+
       </Routes>
+
     </BrowserRouter>
   );
 }
+
 
 export default App;

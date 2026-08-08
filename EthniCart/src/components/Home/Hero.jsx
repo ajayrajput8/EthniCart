@@ -28,7 +28,7 @@ const Hero = () => {
             </p>
 
             <Link
-              to="/shop"
+              to="/login"
               className="inline-block mt-8 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-full font-semibold transition"
             >
               Shop Now
