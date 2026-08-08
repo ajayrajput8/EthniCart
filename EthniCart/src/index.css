@@ -1,21 +1,17 @@
 @import "tailwindcss";
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+@layer base {
+  body {
+    font-family: sans-serif;
+    background-color: #ffffff;
+  }
 
-body {
-  font-family: sans-serif;
-  background-color: #ffffff;
-}
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
 
-a {
-  text-decoration: none;
-  color: inherit;
-}
-
-button {
-  cursor: pointer;
+  button {
+    cursor: pointer;
+  }
 }
