@@ -42,13 +42,21 @@ const Navbar = () => {
         </div>
 
         {/* Cart */}
-        <Link
-          to="/cart"
-          className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
-        >
-          Cart ({totalItems})
-        </Link>
+        <div>
+          <Link
+            to="/cart"
+            className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
+          >
+            Cart ({totalItems})
+          </Link>
 
+          <Link
+            to="/profile"
+            className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
+          >
+            Profile
+          </Link>
+        </div>
       </div>
     </nav>
   );
