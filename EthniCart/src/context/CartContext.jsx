@@ -51,7 +51,9 @@ const CartProvider = ({ children }) => {
 
   // Remove Product
   const removeFromCart = (id) => {
-    setCart(cart.filter((item) => item.id !== id));
+    setCart(
+      cart.filter((item) => item.id !== id)
+    );
   };
 
   return (

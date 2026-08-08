@@ -7,7 +7,9 @@ const WishlistProvider = ({ children }) => {
 
   const addToWishlist = (product) => {
     setWishlist((current) => {
-      const exists = current.some((item) => item.id === product.id);
+      const exists = current.some(
+        (item) => item.id === product.id
+      );
 
       if (exists) {
         return current;
@@ -24,7 +26,9 @@ const WishlistProvider = ({ children }) => {
   };
 
   const isInWishlist = (id) => {
-    return wishlist.some((item) => item.id === id);
+    return wishlist.some(
+      (item) => item.id === id
+    );
   };
 
   return (
