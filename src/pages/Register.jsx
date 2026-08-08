@@ -1,20 +1,23 @@
 import { useContext, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
 import { AuthContext } from "../context/AuthContext";
 
-const Login = () => {
-  const { login } = useContext(AuthContext);
+const Register = () => {
+  const { register } = useContext(AuthContext);
 
   const navigate = useNavigate();
-  const location = useLocation();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
 
   const [form, setForm] = useState({
+    name: "",
     email: "",
     password: "",
+    confirmPassword: "",
   });
 
   const [error, setError] = useState("");
@@ -31,7 +34,18 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const result = login(
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (form.password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
+    const result = register(
+      form.name,
       form.email,
       form.password
     );
@@ -41,23 +55,20 @@ const Login = () => {
       return;
     }
 
-    // Where user wanted to go before login
-    const from = location.state?.from || "/shop";
-
-    navigate(from, { replace: true });
+    navigate("/shop");
   };
 
   return (
     <section className="min-h-screen bg-[#FAF7F2] flex items-center justify-center px-6 py-10">
 
-      <div className="w-full max-w-6xl bg-white rounded-3xl overflow-hidden shadow-lg grid md:grid-cols-2 min-h-[650px]">
+      <div className="w-full max-w-6xl bg-white rounded-3xl overflow-hidden shadow-lg grid md:grid-cols-2 min-h-[700px]">
 
         {/* Left Side */}
         <div className="hidden md:flex relative">
 
           <img
             src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80"
-            alt="Fashion"
+            alt="Ethnic Fashion"
             className="w-full h-full object-cover"
           />
 
@@ -66,7 +77,7 @@ const Login = () => {
           <div className="absolute bottom-10 left-10 text-white">
 
             <h1 className="text-5xl font-bold leading-tight">
-              Welcome to <br />
+              Join <br />
 
               <span className="text-[#F4C95D]">
                 EthniCart
@@ -74,11 +85,12 @@ const Login = () => {
             </h1>
 
             <p className="mt-5 text-lg text-gray-200 max-w-sm">
-              Discover premium ethnic fashion crafted
-              for every occasion.
+              Create your account and discover
+              beautiful ethnic fashion for every occasion.
             </p>
 
           </div>
+
         </div>
 
         {/* Right Side */}
@@ -87,14 +99,14 @@ const Login = () => {
           <div className="w-full">
 
             {/* Heading */}
-            <div className="mb-10">
+            <div className="mb-8">
 
               <h2 className="text-4xl font-bold text-gray-800">
-                Sign In
+                Create Account
               </h2>
 
               <p className="text-gray-500 mt-2">
-                Login to continue shopping.
+                Register to start shopping with EthniCart.
               </p>
 
             </div>
@@ -108,8 +120,27 @@ const Login = () => {
 
             <form
               onSubmit={handleSubmit}
-              className="space-y-6"
+              className="space-y-5"
             >
+
+              {/* Name */}
+              <div>
+
+                <label className="block mb-2 font-medium text-gray-700">
+                  Full Name
+                </label>
+
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Enter your name"
+                  value={form.name}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 rounded-xl px-5 py-4 outline-none focus:ring-2 focus:ring-[#C49A6C]"
+                />
+
+              </div>
 
               {/* Email */}
               <div>
@@ -146,7 +177,7 @@ const Login = () => {
                         : "password"
                     }
                     name="password"
-                    placeholder="Enter your password"
+                    placeholder="Create a password"
                     value={form.password}
                     onChange={handleChange}
                     required
@@ -171,69 +202,69 @@ const Login = () => {
 
               </div>
 
-              {/* Remember */}
-              <div className="flex justify-between items-center text-sm">
+              {/* Confirm Password */}
+              <div>
 
-                <label className="flex items-center gap-2">
-
-                  <input
-                    type="checkbox"
-                  />
-
-                  Remember me
-
+                <label className="block mb-2 font-medium text-gray-700">
+                  Confirm Password
                 </label>
 
-                <Link
-                  to="/forgot-password"
-                  className="text-[#C49A6C] hover:underline"
-                >
-                  Forgot Password?
-                </Link>
+                <div className="relative">
+
+                  <input
+                    type={
+                      showConfirmPassword
+                        ? "text"
+                        : "password"
+                    }
+                    name="confirmPassword"
+                    placeholder="Confirm your password"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    className="w-full border border-gray-300 rounded-xl px-5 py-4 pr-14 outline-none focus:ring-2 focus:ring-[#C49A6C]"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowConfirmPassword(
+                        !showConfirmPassword
+                      )
+                    }
+                    className="absolute right-5 top-1/2 -translate-y-1/2 text-xl text-gray-500"
+                  >
+                    {showConfirmPassword ? (
+                      <FiEyeOff />
+                    ) : (
+                      <FiEye />
+                    )}
+                  </button>
+
+                </div>
 
               </div>
 
-              {/* Login */}
+              {/* Register */}
               <button
                 type="submit"
                 className="w-full bg-[#C49A6C] hover:bg-[#b78958] text-white py-4 rounded-xl font-semibold transition"
               >
-                Login
+                Create Account
               </button>
 
             </form>
 
-            {/* Divider */}
-            <div className="flex items-center my-8">
-
-              <div className="flex-1 h-px bg-gray-200"></div>
-
-              <span className="px-4 text-gray-500">
-                OR
-              </span>
-
-              <div className="flex-1 h-px bg-gray-200"></div>
-
-            </div>
-
-            {/* Google */}
-            <button
-              type="button"
-              className="w-full border border-gray-300 rounded-xl py-4 font-medium hover:bg-gray-100 transition"
-            >
-              Continue with Google
-            </button>
-
-            {/* Register */}
+            {/* Login */}
             <p className="text-center mt-8 text-gray-600">
 
-              Don't have an account?{" "}
+              Already have an account?{" "}
 
               <Link
-                to="/register"
-                className="font-semibold text-[#C49A6C]"
+                to="/login"
+                className="font-semibold text-[#C49A6C] hover:underline"
               >
-                Create Account
+                Login
               </Link>
 
             </p>
@@ -248,4 +279,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
