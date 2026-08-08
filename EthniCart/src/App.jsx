@@ -1,4 +1,9 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Outlet,
+} from "react-router-dom";
 
 import Navbar from "./components/Layout/Navbar";
 
@@ -9,14 +14,15 @@ import Wishlist from "./pages/Wishlist";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Product from "./pages/Product";
+import OrderSuccess from "./pages/OrderSuccess";
 
 import Profile from "./components/Home/Profile";
 
 import AdminLogin from "./components/Admin/AdminLogin";
 import AdminLayout from "./components/Admin/AdminLayout";
 import AdminProtectedRoute from "./components/Admin/ProtectedRoute";
-
-import UserProtectedRoute from "./components/Auth/ProtectedRoute";
+import ProtectedRoute from "./components/Auth/ProtectedRoute";
+import Checkout from "./pages/Checkout";
 
 
 const UserLayout = () => {
@@ -39,58 +45,85 @@ function App() {
 
         <Route element={<UserLayout />}>
 
-          {/* Public */}
-          <Route path="/" element={<Home />} />
+          {/* PUBLIC ROUTES */}
 
-          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={<Home />}
+          />
 
-          <Route path="/register" element={<Register />} />
+          <Route
+            path="/login"
+            element={<Login />}
+          />
+
+          <Route
+            path="/register"
+            element={<Register />}
+          />
 
 
-          {/* Protected */}
+          {/* ================= PROTECTED ROUTES ================= */}
 
           <Route
             path="/shop"
             element={
-              <UserProtectedRoute>
+              <ProtectedRoute>
                 <Shop />
-              </UserProtectedRoute>
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="/product/:id"
             element={
-              <UserProtectedRoute>
+              <ProtectedRoute>
                 <Product />
-              </UserProtectedRoute>
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="/cart"
             element={
-              <UserProtectedRoute>
+              <ProtectedRoute>
                 <Cart />
-              </UserProtectedRoute>
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="/wishlist"
             element={
-              <UserProtectedRoute>
+              <ProtectedRoute>
                 <Wishlist />
-              </UserProtectedRoute>
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="/profile"
             element={
-              <UserProtectedRoute>
+              <ProtectedRoute>
                 <Profile />
-              </UserProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/order-success"
+            element={
+              <ProtectedRoute>
+                <OrderSuccess />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+             path="/checkout"
+             element={
+             <ProtectedRoute>
+              <Checkout />
+             </ProtectedRoute>
             }
           />
 
@@ -118,6 +151,5 @@ function App() {
     </BrowserRouter>
   );
 }
-
 
 export default App;
