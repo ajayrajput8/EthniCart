@@ -23,6 +23,8 @@ import AdminLayout from "./components/Admin/AdminLayout";
 import AdminProtectedRoute from "./components/Admin/ProtectedRoute";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import Checkout from "./pages/Checkout";
+import Orders from "./pages/Orders";
+import OrderDetails from "./pages/OrderDetails";
 
 
 const UserLayout = () => {
@@ -126,6 +128,22 @@ function App() {
              </ProtectedRoute>
             }
           />
+          <Route
+             path="/orders"
+            element={
+             <ProtectedRoute>
+               <Orders />
+             </ProtectedRoute>
+           }
+           />
+           <Route
+             path="/orders/:id"
+             element={
+            <ProtectedRoute>
+             <OrderDetails />
+            </ProtectedRoute>
+            }
+            />
 
         </Route>
 
