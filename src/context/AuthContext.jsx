@@ -1,54 +1,73 @@
 import { createContext, useState } from "react";
-
 export const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
+  // =========================
+  // CURRENT LOGGED IN USER
+  // =========================
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("ethnicartUser");
+
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
   // =========================
   // REGISTER
   // =========================
-  const register = (name, email, password) => {
-    const savedUsers = localStorage.getItem("ethnicartUsers");
+  const register = (
+    name,
+    phone,
+    location,
+    email,
+    password
+  ) => {
+    const savedUsers =
+      localStorage.getItem("ethnicartUsers");
 
-    const users = savedUsers ? JSON.parse(savedUsers) : [];
+    const users = savedUsers
+      ? JSON.parse(savedUsers)
+      : [];
 
     // Check duplicate email
     const existingUser = users.find(
-      (user) => user.email.toLowerCase() === email.toLowerCase()
+      (item) =>
+        item.email?.toLowerCase() ===
+        email.toLowerCase()
     );
 
     if (existingUser) {
       return {
         success: false,
-        message: "An account with this email already exists. Please login.",
+        message:
+          "An account with this email already exists. Please login.",
       };
     }
 
+    // Create new user
     const newUser = {
       id: Date.now(),
       name,
+      phone,
+      location,
       email,
       password,
-      phone: "",
-      location: "",
       orders: 0,
       spent: 0,
       joined: new Date().toLocaleDateString(),
     };
 
-    // Save all users
-    const updatedUsers = [...users, newUser];
+    // Save user in all users
+    const updatedUsers = [
+      ...users,
+      newUser,
+    ];
 
     localStorage.setItem(
       "ethnicartUsers",
       JSON.stringify(updatedUsers)
     );
 
-    // Current logged-in user
+    // Save currently logged-in user
     localStorage.setItem(
       "ethnicartUser",
       JSON.stringify(newUser)
@@ -65,14 +84,18 @@ const AuthProvider = ({ children }) => {
   // LOGIN
   // =========================
   const login = (email, password) => {
-    const savedUsers = localStorage.getItem("ethnicartUsers");
+    const savedUsers =
+      localStorage.getItem("ethnicartUsers");
 
-    const users = savedUsers ? JSON.parse(savedUsers) : [];
+    const users = savedUsers
+      ? JSON.parse(savedUsers)
+      : [];
 
     const storedUser = users.find(
-      (user) =>
-        user.email.toLowerCase() === email.toLowerCase() &&
-        user.password === password
+      (item) =>
+        item.email?.toLowerCase() ===
+          email.toLowerCase() &&
+        item.password === password
     );
 
     if (!storedUser) {
@@ -82,6 +105,7 @@ const AuthProvider = ({ children }) => {
       };
     }
 
+    // Save current user
     localStorage.setItem(
       "ethnicartUser",
       JSON.stringify(storedUser)
@@ -99,6 +123,7 @@ const AuthProvider = ({ children }) => {
   // =========================
   const logout = () => {
     localStorage.removeItem("ethnicartUser");
+
     setUser(null);
   };
 
@@ -113,6 +138,7 @@ const AuthProvider = ({ children }) => {
       ...updatedData,
     };
 
+    // Update current user
     setUser(updatedUser);
 
     localStorage.setItem(
@@ -120,12 +146,19 @@ const AuthProvider = ({ children }) => {
       JSON.stringify(updatedUser)
     );
 
-    const savedUsers = localStorage.getItem("ethnicartUsers");
+    // Update users list
+    const savedUsers =
+      localStorage.getItem("ethnicartUsers");
 
-    const users = savedUsers ? JSON.parse(savedUsers) : [];
+    const users = savedUsers
+      ? JSON.parse(savedUsers)
+      : [];
 
-    const updatedUsers = users.map((item) =>
-      item.id === user.id ? updatedUser : item
+    const updatedUsers = users.map(
+      (item) =>
+        item.id === user.id
+          ? updatedUser
+          : item
     );
 
     localStorage.setItem(
@@ -134,6 +167,9 @@ const AuthProvider = ({ children }) => {
     );
   };
 
+  // =========================
+  // PROVIDER
+  // =========================
   return (
     <AuthContext.Provider
       value={{

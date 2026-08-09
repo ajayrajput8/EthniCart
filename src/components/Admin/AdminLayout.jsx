@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-// =========================
-// CLOUDINARY CONFIG
-// =========================
+// =====================================================
+// CLOUDINARY
+// =====================================================
 
 const CLOUDINARY_CLOUD_NAME = "dz59agoyk";
 const CLOUDINARY_UPLOAD_PRESET = "ethnicart";
 
-// =========================
+// =====================================================
 // INITIAL PRODUCTS
-// =========================
+// =====================================================
 
 const INITIAL_PRODUCTS = [
   {
@@ -21,7 +21,7 @@ const INITIAL_PRODUCTS = [
     stock: 35,
     sales: 120,
     image:
-      "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=300&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500&auto=format&fit=crop&q=60",
   },
   {
     id: 102,
@@ -31,7 +31,7 @@ const INITIAL_PRODUCTS = [
     stock: 18,
     sales: 85,
     image:
-      "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=300&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=500&auto=format&fit=crop&q=60",
   },
   {
     id: 103,
@@ -41,7 +41,7 @@ const INITIAL_PRODUCTS = [
     stock: 8,
     sales: 140,
     image:
-      "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=300&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=500&auto=format&fit=crop&q=60",
   },
   {
     id: 104,
@@ -51,13 +51,13 @@ const INITIAL_PRODUCTS = [
     stock: 12,
     sales: 45,
     image:
-      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&auto=format&fit=crop&q=60",
   },
 ];
 
-// =========================
+// =====================================================
 // INITIAL ORDERS
-// =========================
+// =====================================================
 
 const INITIAL_ORDERS = [
   {
@@ -76,27 +76,11 @@ const INITIAL_ORDERS = [
     date: "2026-08-06",
     status: "Processing",
   },
-  {
-    id: "ORD-9023",
-    customer: "Emma Watson",
-    items: 3,
-    total: 150,
-    date: "2026-08-07",
-    status: "Pending",
-  },
-  {
-    id: "ORD-9024",
-    customer: "David Miller",
-    items: 1,
-    total: 130,
-    date: "2026-08-07",
-    status: "Shipped",
-  },
 ];
 
-// =========================
+// =====================================================
 // ADMIN LAYOUT
-// =========================
+// =====================================================
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -106,17 +90,11 @@ export default function AdminLayout() {
   const [salesView, setSalesView] = useState("weekly");
 
   const [products, setProducts] = useState([]);
-  const [orders, setOrders] = useState(INITIAL_ORDERS);
-
-  // =========================
-  // REAL CUSTOMERS
-  // =========================
-
+  const [orders, setOrders] = useState([]);
   const [customers, setCustomers] = useState([]);
 
-  // =========================
-  // ADD PRODUCT
-  // =========================
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const [newProd, setNewProd] = useState({
     name: "",
@@ -127,53 +105,81 @@ export default function AdminLayout() {
 
   const [newProdFile, setNewProdFile] = useState(null);
   const [newProdPreview, setNewProdPreview] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
-
-  // =========================
-  // EDIT PRODUCT
-  // =========================
 
   const [editingProd, setEditingProd] = useState(null);
   const [editProdFile, setEditProdFile] = useState(null);
   const [editProdPreview, setEditProdPreview] = useState("");
-  const [showEditModal, setShowEditModal] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
 
-  // =========================
-  // LOAD DATA
-  // =========================
+  // =====================================================
+  // LOAD ALL DATA
+  // =====================================================
 
   useEffect(() => {
     setProducts(INITIAL_PRODUCTS);
     loadCustomers();
+    loadOrders();
   }, []);
 
-  // =========================
-  // LOAD REGISTERED USERS
-  // =========================
+  // =====================================================
+  // LOAD CUSTOMERS
+  // =====================================================
 
   const loadCustomers = () => {
-    const savedUsers = localStorage.getItem("ethnicartUsers");
-
-    if (!savedUsers) {
-      setCustomers([]);
-      return;
-    }
-
     try {
+      const savedUsers = localStorage.getItem("ethnicartUsers");
+
+      if (!savedUsers) {
+        setCustomers([]);
+        return;
+      }
+
       const users = JSON.parse(savedUsers);
 
-      const formattedUsers = users.map((user, index) => ({
-        id: user.id || index + 1,
-        name: user.name || "Unknown",
-        email: user.email || "Not provided",
-        phone: user.phone || "Not provided",
-        location: user.location || "Not provided",
-        orders: user.orders || 0,
-        spent: Number(user.spent || 0),
-        joined: user.joined || "Unknown",
-      }));
+      if (!Array.isArray(users)) {
+        setCustomers([]);
+        return;
+      }
+
+      const savedOrders = localStorage.getItem("ethnicartOrders");
+      const allOrders = savedOrders ? JSON.parse(savedOrders) : [];
+
+      const formattedUsers = users.map((user, index) => {
+        const userEmail = String(user.email || "").toLowerCase();
+
+        const userOrders = allOrders.filter((order) => {
+          const orderEmail = String(
+            order.customer?.email ||
+              order.email ||
+              ""
+          ).toLowerCase();
+
+          return orderEmail && orderEmail === userEmail;
+        });
+
+        const spent = userOrders.reduce(
+          (sum, order) => sum + Number(order.total || 0),
+          0
+        );
+
+        return {
+          id: user.id || index + 1,
+          name: user.name || "Unknown Customer",
+          email: user.email || "Not provided",
+          phone: user.phone || "Not provided",
+          location: user.location || "Not provided",
+          orders:
+            user.orders !== undefined
+              ? Number(user.orders)
+              : userOrders.length,
+          spent:
+            user.spent !== undefined
+              ? Number(user.spent)
+              : spent,
+          joined: user.joined || "Unknown",
+        };
+      });
 
       setCustomers(formattedUsers);
     } catch (error) {
@@ -182,62 +188,153 @@ export default function AdminLayout() {
     }
   };
 
-  // =========================
-  // TAB
-  // =========================
+  // =====================================================
+  // LOAD REAL ORDERS
+  // =====================================================
+
+  const loadOrders = () => {
+    try {
+      const savedOrders = localStorage.getItem("ethnicartOrders");
+
+      if (!savedOrders) {
+        setOrders(INITIAL_ORDERS);
+        return;
+      }
+
+      const storedOrders = JSON.parse(savedOrders);
+
+      if (!Array.isArray(storedOrders)) {
+        setOrders(INITIAL_ORDERS);
+        return;
+      }
+
+      const formattedOrders = storedOrders.map((order) => {
+        const customerName =
+          order.customer?.name ||
+          order.customerName ||
+          order.name ||
+          order.customer?.email ||
+          order.email ||
+          "Unknown Customer";
+
+        return {
+          ...order,
+
+          id:
+            order.id ||
+            `ORD-${Date.now()}`,
+
+          customer: customerName,
+
+          customerEmail:
+            order.customer?.email ||
+            order.customerEmail ||
+            order.email ||
+            "",
+
+          itemsCount: Array.isArray(order.items)
+            ? order.items.length
+            : Number(order.items || 0),
+
+          total: Number(order.total || 0),
+
+          date:
+            order.date ||
+            new Date().toISOString(),
+
+          status:
+            order.status ||
+            "Confirmed",
+        };
+      });
+
+      setOrders(formattedOrders.reverse());
+    } catch (error) {
+      console.error("Failed to load orders:", error);
+      setOrders(INITIAL_ORDERS);
+    }
+  };
+
+  // =====================================================
+  // TAB CHANGE
+  // =====================================================
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setIsMobileMenuOpen(false);
+
+    if (tab === "orders") {
+      loadOrders();
+    }
 
     if (tab === "customers") {
       loadCustomers();
     }
   };
 
-  // =========================
+  // =====================================================
   // LOGOUT
-  // =========================
+  // =====================================================
 
   const handleLogout = () => {
     localStorage.removeItem("adminAuth");
     navigate("/");
   };
 
-  // =========================
+  // =====================================================
   // ORDER STATUS
-  // =========================
+  // =====================================================
 
   const handleOrderStatusChange = (orderId, newStatus) => {
-    setOrders((currentOrders) =>
-      currentOrders.map((order) =>
-        order.id === orderId
-          ? { ...order, status: newStatus }
+    try {
+      const savedOrders =
+        localStorage.getItem("ethnicartOrders");
+
+      if (!savedOrders) return;
+
+      const originalOrders = JSON.parse(savedOrders);
+
+      const updatedOrders = originalOrders.map((order) =>
+        String(order.id) === String(orderId)
+          ? {
+              ...order,
+              status: newStatus,
+            }
           : order
+      );
+
+      localStorage.setItem(
+        "ethnicartOrders",
+        JSON.stringify(updatedOrders)
+      );
+
+      loadOrders();
+    } catch (error) {
+      console.error(
+        "Failed to update order status:",
+        error
+      );
+    }
+  };
+
+  // =====================================================
+  // DELETE PRODUCT
+  // =====================================================
+
+  const handleDeleteProduct = (id) => {
+    setProducts((currentProducts) =>
+      currentProducts.filter(
+        (product) => product.id !== id
       )
     );
   };
 
-  // =========================
-  // DELETE PRODUCT
-  // =========================
-
-  const handleDeleteProduct = (id) => {
-    setProducts((currentProducts) =>
-      currentProducts.filter((product) => product.id !== id)
-    );
-  };
-
-  // =========================
-  // CLOUDINARY
-  // =========================
+  // =====================================================
+  // CLOUDINARY UPLOAD
+  // =====================================================
 
   const uploadImageToCloudinary = async (file) => {
     if (!file) return "";
-
-    if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-      return URL.createObjectURL(file);
-    }
 
     const formData = new FormData();
 
@@ -259,7 +356,9 @@ export default function AdminLayout() {
       const data = await response.json();
 
       if (!response.ok || !data.secure_url) {
-        throw new Error("Cloudinary upload failed");
+        throw new Error(
+          "Cloudinary upload failed"
+        );
       }
 
       return data.secure_url;
@@ -270,9 +369,9 @@ export default function AdminLayout() {
     }
   };
 
-  // =========================
-  // NEW IMAGE
-  // =========================
+  // =====================================================
+  // ADD PRODUCT IMAGE
+  // =====================================================
 
   const handleNewImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -280,12 +379,14 @@ export default function AdminLayout() {
     if (!file) return;
 
     setNewProdFile(file);
-    setNewProdPreview(URL.createObjectURL(file));
+    setNewProdPreview(
+      URL.createObjectURL(file)
+    );
   };
 
-  // =========================
+  // =====================================================
   // ADD PRODUCT
-  // =========================
+  // =====================================================
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
@@ -305,15 +406,17 @@ export default function AdminLayout() {
 
     if (newProdFile) {
       imageUrl =
-        await uploadImageToCloudinary(newProdFile);
+        await uploadImageToCloudinary(
+          newProdFile
+        );
     }
 
     const createdProduct = {
       id: Date.now(),
       name: newProd.name,
       category: newProd.category,
-      price: parseFloat(newProd.price),
-      stock: parseInt(newProd.stock),
+      price: Number(newProd.price),
+      stock: Number(newProd.stock),
       sales: 0,
       image: imageUrl,
     };
@@ -336,20 +439,23 @@ export default function AdminLayout() {
     setShowAddModal(false);
   };
 
-  // =========================
+  // =====================================================
   // OPEN EDIT
-  // =========================
+  // =====================================================
 
   const handleOpenEditModal = (product) => {
-    setEditingProd({ ...product });
+    setEditingProd({
+      ...product,
+    });
+
     setEditProdPreview(product.image);
     setEditProdFile(null);
     setShowEditModal(true);
   };
 
-  // =========================
+  // =====================================================
   // EDIT IMAGE
-  // =========================
+  // =====================================================
 
   const handleEditImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -357,17 +463,22 @@ export default function AdminLayout() {
     if (!file) return;
 
     setEditProdFile(file);
-    setEditProdPreview(URL.createObjectURL(file));
+    setEditProdPreview(
+      URL.createObjectURL(file)
+    );
   };
 
-  // =========================
+  // =====================================================
   // UPDATE PRODUCT
-  // =========================
+  // =====================================================
 
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
 
-    if (!editingProd?.name || !editingProd?.price) {
+    if (
+      !editingProd?.name ||
+      !editingProd?.price
+    ) {
       return;
     }
 
@@ -377,7 +488,9 @@ export default function AdminLayout() {
 
     if (editProdFile) {
       imageUrl =
-        await uploadImageToCloudinary(editProdFile);
+        await uploadImageToCloudinary(
+          editProdFile
+        );
     }
 
     setProducts((currentProducts) =>
@@ -385,8 +498,12 @@ export default function AdminLayout() {
         product.id === editingProd.id
           ? {
               ...editingProd,
-              price: parseFloat(editingProd.price),
-              stock: parseInt(editingProd.stock),
+              price: Number(
+                editingProd.price
+              ),
+              stock: Number(
+                editingProd.stock
+              ),
               image: imageUrl,
             }
           : product
@@ -400,84 +517,87 @@ export default function AdminLayout() {
     setEditProdPreview("");
   };
 
-  // =========================
-  // DASHBOARD DATA
-  // =========================
+  // =====================================================
+  // DASHBOARD
+  // =====================================================
 
-  const totalRevenue = orders
-    .reduce((sum, order) => sum + order.total, 0)
-    .toFixed(2);
-
-  const totalStock = products.reduce(
-    (sum, product) => sum + product.stock,
+  const totalRevenue = orders.reduce(
+    (sum, order) =>
+      sum + Number(order.total || 0),
     0
   );
 
-  const monthlySales = 124500;
-  const weeklySales = 32400;
-  const yearlySales = 865900;
+  const totalStock = products.reduce(
+    (sum, product) =>
+      sum + Number(product.stock || 0),
+    0
+  );
 
-  const topSellingProducts = [...products]
-    .sort((a, b) => b.sales - a.sales)
+  const topSellingProducts = [
+    ...products,
+  ]
+    .sort(
+      (a, b) =>
+        Number(b.sales || 0) -
+        Number(a.sales || 0)
+    )
     .slice(0, 5);
 
-  const bestProduct = topSellingProducts[0];
+  const bestProduct =
+    topSellingProducts[0];
 
-  // =========================
+  // =====================================================
   // SALES DATA
-  // =========================
+  // =====================================================
 
   const weekData = Array(7).fill(0);
 
   orders.forEach((order) => {
-    const orderDate = new Date(order.date);
-    const today = new Date();
+    const date = new Date(order.date);
 
-    const diff =
-      (today - orderDate) /
-      (1000 * 60 * 60 * 24);
-
-    if (diff <= 6 && diff >= 0) {
-      weekData[orderDate.getDay()] +=
-        order.total;
+    if (!isNaN(date.getTime())) {
+      weekData[date.getDay()] +=
+        Number(order.total || 0);
     }
   });
 
   const monthData = Array(12).fill(0);
 
   orders.forEach((order) => {
-    const month = new Date(
-      order.date
-    ).getMonth();
+    const date = new Date(order.date);
 
-    monthData[month] += order.total;
+    if (!isNaN(date.getTime())) {
+      monthData[date.getMonth()] +=
+        Number(order.total || 0);
+    }
   });
 
   const yearData = {};
 
   orders.forEach((order) => {
-    const year = new Date(
-      order.date
-    ).getFullYear();
+    const date = new Date(order.date);
 
-    yearData[year] =
-      (yearData[year] || 0) + order.total;
+    if (!isNaN(date.getTime())) {
+      const year =
+        date.getFullYear();
+
+      yearData[year] =
+        (yearData[year] || 0) +
+        Number(order.total || 0);
+    }
   });
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
 
-      {/* =========================
-          MOBILE TOP BAR
-      ========================= */}
+      {/* MOBILE BAR */}
 
-      <div className="fixed top-0 left-0 right-0 z-30 bg-gray-900 text-white p-3 flex items-center justify-between md:hidden">
-
-        <div className="flex items-center gap-2 font-bold">
-          <span className="bg-blue-600 px-2 py-1 rounded">
-            A
-          </span>
-
+      <div className="fixed top-0 left-0 right-0 z-40 bg-gray-900 text-white p-3 flex items-center justify-between md:hidden">
+        <div className="font-bold">
           Admin Panel
         </div>
 
@@ -487,47 +607,40 @@ export default function AdminLayout() {
               !isMobileMenuOpen
             )
           }
-          className="p-2 rounded-lg bg-gray-800"
+          className="bg-gray-800 px-3 py-2 rounded"
         >
           ☰
         </button>
       </div>
 
-      {/* =========================
-          MOBILE BACKDROP
-      ========================= */}
+      {/* MOBILE BACKDROP */}
 
       {isMobileMenuOpen && (
         <div
           onClick={() =>
             setIsMobileMenuOpen(false)
           }
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
         />
       )}
 
-      {/* =========================
-          SIDEBAR
-      ========================= */}
+      {/* SIDEBAR */}
 
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col p-4 shadow-lg transform transition-transform duration-300 ${
+        className={`fixed md:static inset-y-0 left-0 z-40 w-64 bg-gray-900 text-white p-4 flex flex-col transition-transform duration-300 ${
           isMobileMenuOpen
             ? "translate-x-0"
             : "-translate-x-full md:translate-x-0"
         }`}
       >
-
-        <div className="hidden md:flex text-lg font-bold p-2 items-center gap-2 border-b border-gray-800 pb-4 mb-4">
-
-          <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded font-mono">
-            A
-          </span>
-
-          Admin Panel
+        <div className="text-xl font-bold border-b border-gray-800 pb-5 mb-5">
+          🛍️ EthniCart
+          <div className="text-xs text-gray-500 mt-1">
+            Admin Panel
+          </div>
         </div>
 
-        <nav className="flex flex-col gap-1 flex-1 mt-16 md:mt-0">
+        <nav className="flex flex-col gap-2">
 
           <SidebarBtn
             label="Dashboard"
@@ -536,7 +649,9 @@ export default function AdminLayout() {
               activeTab === "dashboard"
             }
             onClick={() =>
-              handleTabChange("dashboard")
+              handleTabChange(
+                "dashboard"
+              )
             }
           />
 
@@ -548,7 +663,9 @@ export default function AdminLayout() {
               activeTab === "orders"
             }
             onClick={() =>
-              handleTabChange("orders")
+              handleTabChange(
+                "orders"
+              )
             }
           />
 
@@ -560,7 +677,9 @@ export default function AdminLayout() {
               activeTab === "products"
             }
             onClick={() =>
-              handleTabChange("products")
+              handleTabChange(
+                "products"
+              )
             }
           />
 
@@ -572,7 +691,9 @@ export default function AdminLayout() {
               activeTab === "customers"
             }
             onClick={() =>
-              handleTabChange("customers")
+              handleTabChange(
+                "customers"
+              )
             }
           />
 
@@ -589,43 +710,38 @@ export default function AdminLayout() {
 
         </nav>
 
-        <div className="pt-4 border-t border-gray-800">
-
+        <div className="mt-auto border-t border-gray-800 pt-4">
           <button
             onClick={handleLogout}
-            className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
+            className="text-gray-400 hover:text-white text-sm"
           >
             ← Logout
           </button>
-
         </div>
-
       </aside>
 
-      {/* =========================
-          MAIN
-      ========================= */}
+      {/* MAIN */}
 
-      <main className="flex-1 p-4 sm:p-6 md:p-8 pt-20 md:pt-8 overflow-y-auto">
+      <main className="flex-1 p-4 md:p-8 pt-20 md:pt-8 overflow-y-auto">
 
-        <header className="flex justify-between items-center pb-6 border-b border-gray-200 mb-8">
+        <header className="flex justify-between items-center mb-8 border-b pb-5">
 
-          <h1 className="text-2xl font-bold text-gray-900 uppercase">
+          <h1 className="text-2xl font-bold uppercase">
             {activeTab}
           </h1>
 
           <a
             href="/"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg"
           >
             Home
           </a>
 
         </header>
 
-        {/* =========================
+        {/* =================================================
             DASHBOARD
-        ========================= */}
+        ================================================= */}
 
         {activeTab === "dashboard" && (
           <div className="space-y-8">
@@ -634,15 +750,15 @@ export default function AdminLayout() {
 
               <StatCard
                 title="Total Revenue"
-                value={`₹${totalRevenue}`}
-                trend="+14% this month"
+                value={`₹${totalRevenue.toFixed(2)}`}
+                trend="All orders"
                 color="border-emerald-500"
               />
 
               <StatCard
                 title="Total Orders"
                 value={orders.length}
-                trend="+5 new today"
+                trend="Store orders"
                 color="border-blue-500"
               />
 
@@ -663,56 +779,87 @@ export default function AdminLayout() {
             </div>
 
             <div>
-
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              <h2 className="text-xl font-bold mb-4">
                 Recent Orders
-              </h3>
+              </h2>
 
               <OrdersTable
-                orders={orders.slice(0, 3)}
+                orders={orders.slice(0, 5)}
                 onStatusChange={
                   handleOrderStatusChange
                 }
               />
-
             </div>
 
           </div>
         )}
 
-        {/* =========================
+        {/* =================================================
             ORDERS
-        ========================= */}
+        ================================================= */}
 
         {activeTab === "orders" && (
           <div>
 
-            <h3 className="text-lg font-semibold text-gray-800 mb-6">
-              All Store Orders
-            </h3>
+            <div className="flex justify-between items-center mb-6">
 
-            <OrdersTable
-              orders={orders}
-              onStatusChange={
-                handleOrderStatusChange
-              }
-            />
+              <div>
+                <h2 className="text-xl font-bold">
+                  All Store Orders
+                </h2>
+
+                <p className="text-sm text-gray-500 mt-1">
+                  Orders placed by customers
+                </p>
+              </div>
+
+              <button
+                onClick={loadOrders}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+              >
+                ↻ Refresh
+              </button>
+
+            </div>
+
+            {orders.length === 0 ? (
+              <div className="bg-white rounded-xl border p-12 text-center">
+                <div className="text-5xl mb-4">
+                  📦
+                </div>
+
+                <h3 className="text-xl font-bold">
+                  No Orders Found
+                </h3>
+
+                <p className="text-gray-500 mt-2">
+                  Customer orders will appear here.
+                </p>
+              </div>
+            ) : (
+              <OrdersTable
+                orders={orders}
+                onStatusChange={
+                  handleOrderStatusChange
+                }
+              />
+            )}
 
           </div>
         )}
 
-        {/* =========================
+        {/* =================================================
             PRODUCTS
-        ========================= */}
+        ================================================= */}
 
         {activeTab === "products" && (
           <div>
 
             <div className="flex justify-between items-center mb-6">
 
-              <h3 className="text-lg font-semibold">
+              <h2 className="text-xl font-bold">
                 Product Catalog
-              </h3>
+              </h2>
 
               <button
                 onClick={() =>
@@ -725,26 +872,25 @@ export default function AdminLayout() {
 
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border overflow-x-auto">
+            <div className="bg-white rounded-xl border shadow-sm overflow-x-auto">
 
-              <table className="w-full text-left min-w-[650px]">
+              <table className="w-full min-w-[700px]">
 
                 <thead className="bg-gray-50">
-
                   <tr>
-                    <th className="p-4">
+                    <th className="p-4 text-left">
                       Product
                     </th>
 
-                    <th className="p-4">
+                    <th className="p-4 text-left">
                       Category
                     </th>
 
-                    <th className="p-4">
+                    <th className="p-4 text-left">
                       Price
                     </th>
 
-                    <th className="p-4">
+                    <th className="p-4 text-left">
                       Stock
                     </th>
 
@@ -752,89 +898,101 @@ export default function AdminLayout() {
                       Actions
                     </th>
                   </tr>
-
                 </thead>
 
                 <tbody>
 
-                  {products.map((product) => (
+                  {products.map(
+                    (product) => (
+                      <tr
+                        key={product.id}
+                        className="border-t"
+                      >
 
-                    <tr
-                      key={product.id}
-                      className="border-t"
-                    >
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
 
-                      <td className="p-4">
+                            <img
+                              src={
+                                product.image
+                              }
+                              alt={
+                                product.name
+                              }
+                              className="w-12 h-12 object-cover rounded-lg"
+                            />
 
-                        <div className="flex items-center gap-3">
+                            <span className="font-semibold">
+                              {
+                                product.name
+                              }
+                            </span>
 
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-12 h-12 rounded-lg object-cover"
-                          />
+                          </div>
+                        </td>
 
-                          <span className="font-medium">
-                            {product.name}
-                          </span>
-
-                        </div>
-
-                      </td>
-
-                      <td className="p-4">
-                        {product.category}
-                      </td>
-
-                      <td className="p-4 font-semibold">
-                        ₹{product.price.toFixed(2)}
-                      </td>
-
-                      <td className="p-4">
-                        <span
-                          className={
-                            product.stock < 10
-                              ? "text-red-500 font-semibold"
-                              : "text-green-600 font-semibold"
+                        <td className="p-4">
+                          {
+                            product.category
                           }
-                        >
-                          {product.stock} units
-                        </span>
-                      </td>
+                        </td>
 
-                      <td className="p-4">
+                        <td className="p-4 font-semibold">
+                          ₹
+                          {Number(
+                            product.price
+                          ).toFixed(2)}
+                        </td>
 
-                        <div className="flex justify-end gap-2">
-
-                          <button
-                            onClick={() =>
-                              handleOpenEditModal(
-                                product
-                              )
+                        <td className="p-4">
+                          <span
+                            className={
+                              product.stock <
+                              10
+                                ? "text-red-600 font-semibold"
+                                : "text-green-600 font-semibold"
                             }
-                            className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded"
                           >
-                            Edit
-                          </button>
+                            {
+                              product.stock
+                            }{" "}
+                            units
+                          </span>
+                        </td>
 
-                          <button
-                            onClick={() =>
-                              handleDeleteProduct(
-                                product.id
-                              )
-                            }
-                            className="bg-red-50 text-red-600 px-3 py-1.5 rounded"
-                          >
-                            Delete
-                          </button>
+                        <td className="p-4">
 
-                        </div>
+                          <div className="flex justify-end gap-2">
 
-                      </td>
+                            <button
+                              onClick={() =>
+                                handleOpenEditModal(
+                                  product
+                                )
+                              }
+                              className="bg-blue-50 text-blue-600 px-3 py-2 rounded"
+                            >
+                              Edit
+                            </button>
 
-                    </tr>
+                            <button
+                              onClick={() =>
+                                handleDeleteProduct(
+                                  product.id
+                                )
+                              }
+                              className="bg-red-50 text-red-600 px-3 py-2 rounded"
+                            >
+                              Delete
+                            </button>
 
-                  ))}
+                          </div>
+
+                        </td>
+
+                      </tr>
+                    )
+                  )}
 
                 </tbody>
 
@@ -842,16 +1000,16 @@ export default function AdminLayout() {
 
             </div>
 
-            {/* =========================
-                ADD MODAL
-            ========================= */}
-
             {showAddModal && (
               <ProductModal
                 title="Add New Product"
                 product={newProd}
-                setProduct={setNewProd}
-                preview={newProdPreview}
+                setProduct={
+                  setNewProd
+                }
+                preview={
+                  newProdPreview
+                }
                 onImageChange={
                   handleNewImageChange
                 }
@@ -859,24 +1017,30 @@ export default function AdminLayout() {
                   handleAddProduct
                 }
                 onClose={() =>
-                  setShowAddModal(false)
+                  setShowAddModal(
+                    false
+                  )
                 }
-                uploading={isUploading}
+                uploading={
+                  isUploading
+                }
                 isEdit={false}
               />
             )}
-
-            {/* =========================
-                EDIT MODAL
-            ========================= */}
 
             {showEditModal &&
               editingProd && (
                 <ProductModal
                   title="Edit Product"
-                  product={editingProd}
-                  setProduct={setEditingProd}
-                  preview={editProdPreview}
+                  product={
+                    editingProd
+                  }
+                  setProduct={
+                    setEditingProd
+                  }
+                  preview={
+                    editProdPreview
+                  }
                   onImageChange={
                     handleEditImageChange
                   }
@@ -884,10 +1048,16 @@ export default function AdminLayout() {
                     handleUpdateProduct
                   }
                   onClose={() => {
-                    setShowEditModal(false);
-                    setEditingProd(null);
+                    setShowEditModal(
+                      false
+                    );
+                    setEditingProd(
+                      null
+                    );
                   }}
-                  uploading={isUploading}
+                  uploading={
+                    isUploading
+                  }
                   isEdit={true}
                 />
               )}
@@ -895,9 +1065,9 @@ export default function AdminLayout() {
           </div>
         )}
 
-        {/* =========================
+        {/* =================================================
             CUSTOMERS
-        ========================= */}
+        ================================================= */}
 
         {activeTab === "customers" && (
           <div>
@@ -905,20 +1075,18 @@ export default function AdminLayout() {
             <div className="flex justify-between items-center mb-6">
 
               <div>
-
-                <h3 className="text-lg font-semibold text-gray-800">
+                <h2 className="text-xl font-bold">
                   Registered Customers
-                </h3>
+                </h2>
 
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500">
                   Real users registered on EthniCart
                 </p>
-
               </div>
 
               <button
                 onClick={loadCustomers}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg"
               >
                 ↻ Refresh
               </button>
@@ -926,141 +1094,150 @@ export default function AdminLayout() {
             </div>
 
             {customers.length === 0 ? (
-
-              <div className="bg-white rounded-xl border p-10 text-center">
+              <div className="bg-white rounded-xl border p-12 text-center">
 
                 <div className="text-5xl mb-4">
                   👥
                 </div>
 
-                <h3 className="text-lg font-semibold text-gray-800">
-                  No customers yet
+                <h3 className="text-xl font-bold">
+                  No Customers Yet
                 </h3>
 
-                <p className="text-gray-500 text-sm mt-2">
+                <p className="text-gray-500 mt-2">
                   Registered users will appear here.
                 </p>
 
               </div>
-
             ) : (
+              <div className="bg-white rounded-xl border overflow-x-auto">
 
-              <div className="bg-white rounded-xl shadow-sm border overflow-x-auto">
+                <table className="w-full min-w-[850px]">
 
-                <table className="w-full text-left min-w-[850px]">
+                  <thead className="bg-gray-50">
+                    <tr>
 
-                  <thead>
-
-                    <tr className="bg-gray-50 text-gray-600 text-xs uppercase border-b">
-
-                      <th className="py-3 px-4">
+                      <th className="p-4 text-left">
                         Customer
                       </th>
 
-                      <th className="py-3 px-4">
+                      <th className="p-4 text-left">
                         Email
                       </th>
 
-                      <th className="py-3 px-4">
+                      <th className="p-4 text-left">
                         Phone
                       </th>
 
-                      <th className="py-3 px-4">
+                      <th className="p-4 text-left">
                         Location
                       </th>
 
-                      <th className="py-3 px-4">
+                      <th className="p-4 text-left">
                         Orders
                       </th>
 
-                      <th className="py-3 px-4">
-                        Total Spent
+                      <th className="p-4 text-left">
+                        Spent
                       </th>
 
-                      <th className="py-3 px-4">
+                      <th className="p-4 text-left">
                         Joined
                       </th>
 
                     </tr>
-
                   </thead>
 
-                  <tbody className="divide-y">
+                  <tbody>
 
-                    {customers.map((customer) => (
+                    {customers.map(
+                      (customer) => (
+                        <tr
+                          key={
+                            customer.id
+                          }
+                          className="border-t hover:bg-gray-50"
+                        >
 
-                      <tr
-                        key={customer.id}
-                        className="hover:bg-gray-50"
-                      >
+                          <td className="p-4">
 
-                        <td className="py-4 px-4">
+                            <div className="flex items-center gap-3">
 
-                          <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                                {customer.name
+                                  ?.charAt(
+                                    0
+                                  )
+                                  ?.toUpperCase()}
+                              </div>
 
-                            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
-                              {customer.name
-                                ?.charAt(0)
-                                ?.toUpperCase()}
+                              <span className="font-semibold">
+                                {
+                                  customer.name
+                                }
+                              </span>
+
                             </div>
 
-                            <div>
+                          </td>
 
-                              <p className="font-semibold text-gray-900">
-                                {customer.name}
-                              </p>
+                          <td className="p-4 text-sm text-gray-600">
+                            {
+                              customer.email
+                            }
+                          </td>
 
-                            </div>
+                          <td className="p-4 text-sm text-gray-600">
+                            {
+                              customer.phone
+                            }
+                          </td>
 
-                          </div>
+                          <td className="p-4 text-sm text-gray-600">
+                            {
+                              customer.location
+                            }
+                          </td>
 
-                        </td>
+                          <td className="p-4">
+                            {
+                              customer.orders
+                            }
+                          </td>
 
-                        <td className="py-4 px-4 text-sm text-gray-600">
-                          {customer.email}
-                        </td>
+                          <td className="p-4 font-semibold">
+                            ₹
+                            {Number(
+                              customer.spent ||
+                                0
+                            ).toFixed(
+                              2
+                            )}
+                          </td>
 
-                        <td className="py-4 px-4 text-sm text-gray-600">
-                          {customer.phone}
-                        </td>
+                          <td className="p-4 text-sm text-gray-500">
+                            {
+                              customer.joined
+                            }
+                          </td>
 
-                        <td className="py-4 px-4 text-sm text-gray-600">
-                          {customer.location}
-                        </td>
-
-                        <td className="py-4 px-4 text-sm">
-                          {customer.orders}
-                        </td>
-
-                        <td className="py-4 px-4 font-semibold">
-                          ₹
-                          {Number(
-                            customer.spent || 0
-                          ).toFixed(2)}
-                        </td>
-
-                        <td className="py-4 px-4 text-sm text-gray-500">
-                          {customer.joined}
-                        </td>
-
-                      </tr>
-
-                    ))}
+                        </tr>
+                      )
+                    )}
 
                   </tbody>
 
                 </table>
 
               </div>
-
             )}
 
           </div>
         )}
 
-        {/* =========================
+        {/* =================================================
             SALES
-        ========================= */}
+        ================================================= */}
 
         {activeTab === "sales" && (
           <div className="space-y-6">
@@ -1068,67 +1245,83 @@ export default function AdminLayout() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
 
               <StatCard
-                onClick={() =>
-                  setSalesView("monthly")
-                }
                 title="Monthly Sales"
-                value={`₹${monthlySales.toLocaleString()}`}
-                trend="+12%"
+                value={`₹${monthData[new Date().getMonth()].toFixed(2)}`}
+                trend="Current month"
                 color="border-blue-500"
+                onClick={() =>
+                  setSalesView(
+                    "monthly"
+                  )
+                }
               />
 
               <StatCard
-                onClick={() =>
-                  setSalesView("weekly")
-                }
                 title="Weekly Sales"
-                value={`₹${weeklySales.toLocaleString()}`}
-                trend="+8%"
-                color="border-blue-500"
+                value={`₹${weekData.reduce(
+                  (a, b) =>
+                    a + b,
+                  0
+                ).toFixed(2)}`}
+                trend="All loaded orders"
+                color="border-green-500"
+                onClick={() =>
+                  setSalesView(
+                    "weekly"
+                  )
+                }
               />
 
               <StatCard
+                title="Total Sales"
+                value={`₹${totalRevenue.toFixed(2)}`}
+                trend="All orders"
+                color="border-purple-500"
                 onClick={() =>
-                  setSalesView("yearly")
+                  setSalesView(
+                    "yearly"
+                  )
                 }
-                title="Yearly Sales"
-                value={`₹${yearlySales.toLocaleString()}`}
-                trend="+24%"
-                color="border-blue-500"
               />
 
             </div>
 
-            <div className="flex gap-3 justify-center">
+            <div className="flex gap-3">
 
-              {["weekly", "monthly", "yearly"].map(
-                (type) => (
-
-                  <button
-                    key={type}
-                    onClick={() =>
-                      setSalesView(type)
-                    }
-                    className={
-                      salesView === type
-                        ? "bg-blue-600 text-white px-4 py-2 rounded"
-                        : "bg-gray-200 px-4 py-2 rounded"
-                    }
-                  >
-                    {type
-                      .charAt(0)
-                      .toUpperCase() +
-                      type.slice(1)}
-                  </button>
-
-                )
-              )}
+              {[
+                "weekly",
+                "monthly",
+                "yearly",
+              ].map((type) => (
+                <button
+                  key={type}
+                  onClick={() =>
+                    setSalesView(
+                      type
+                    )
+                  }
+                  className={
+                    salesView ===
+                    type
+                      ? "bg-blue-600 text-white px-4 py-2 rounded-lg"
+                      : "bg-gray-200 px-4 py-2 rounded-lg"
+                  }
+                >
+                  {type
+                    .charAt(0)
+                    .toUpperCase() +
+                    type.slice(
+                      1
+                    )}
+                </button>
+              ))}
 
             </div>
 
-            {salesView === "weekly" && (
+            {salesView ===
+              "weekly" && (
               <SalesBox
-                title="Last 7 Days Revenue"
+                title="Weekly Revenue"
                 data={weekData}
                 labels={[
                   "Sun",
@@ -1142,10 +1335,13 @@ export default function AdminLayout() {
               />
             )}
 
-            {salesView === "monthly" && (
+            {salesView ===
+              "monthly" && (
               <SalesBox
                 title="Monthly Revenue"
-                data={monthData}
+                data={
+                  monthData
+                }
                 labels={[
                   "Jan",
                   "Feb",
@@ -1163,7 +1359,8 @@ export default function AdminLayout() {
               />
             )}
 
-            {salesView === "yearly" && (
+            {salesView ===
+              "yearly" && (
               <SalesBox
                 title="Yearly Revenue"
                 data={Object.values(
@@ -1175,69 +1372,36 @@ export default function AdminLayout() {
               />
             )}
 
-            <div className="bg-white p-6 rounded-xl shadow border">
+            <div className="bg-white rounded-xl border p-6">
 
-              <h2 className="text-lg font-semibold mb-3">
-                Monthly Target
-              </h2>
-
-              <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
-
-                <div className="w-3/4 h-full bg-green-500 rounded-full" />
-
-              </div>
-
-              <p className="mt-2 text-gray-500">
-                75% of target achieved
-              </p>
-
-            </div>
-
-            <div className="bg-white rounded-xl shadow border p-6">
-
-              <h2 className="text-lg font-semibold mb-4">
+              <h2 className="text-lg font-bold mb-4">
                 Top Selling Products
               </h2>
 
               {topSellingProducts.map(
-                (item, index) => (
-
+                (product, index) => (
                   <div
-                    key={item.id}
-                    className="flex justify-between py-3 border-b"
+                    key={
+                      product.id
+                    }
+                    className="flex justify-between border-b py-3"
                   >
-
                     <span>
                       {index + 1}.{" "}
-                      {item.name}
+                      {
+                        product.name
+                      }
                     </span>
 
                     <span className="font-bold">
-                      {item.sales} Sold
+                      {
+                        product.sales
+                      }{" "}
+                      Sold
                     </span>
-
                   </div>
-
                 )
               )}
-
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-
-              <h2 className="text-xl font-bold text-blue-700">
-                Best Selling Product
-              </h2>
-
-              <p className="mt-3 text-lg font-semibold">
-                {bestProduct?.name ||
-                  "No products"}
-              </p>
-
-              <p className="text-gray-600">
-                {bestProduct?.sales || 0}{" "}
-                Units Sold
-              </p>
 
             </div>
 
@@ -1249,44 +1413,42 @@ export default function AdminLayout() {
   );
 }
 
-// =========================
+// =====================================================
 // SIDEBAR BUTTON
-// =========================
+// =====================================================
 
 function SidebarBtn({
   label,
+  icon,
   active,
   onClick,
   badge,
-  icon,
 }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium w-full text-left ${
+      className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium text-left ${
         active
           ? "bg-gray-800 text-white"
           : "text-gray-400 hover:bg-gray-800 hover:text-white"
       }`}
     >
-
       <span>
         {icon} {label}
       </span>
 
       {badge !== undefined && (
-        <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">
+        <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
           {badge}
         </span>
       )}
-
     </button>
   );
 }
 
-// =========================
+// =====================================================
 // STAT CARD
-// =========================
+// =====================================================
 
 function StatCard({
   title,
@@ -1298,32 +1460,30 @@ function StatCard({
   return (
     <div
       onClick={onClick}
-      className={`bg-white p-5 rounded-xl border shadow-sm border-t-4 ${color} ${
+      className={`bg-white p-5 rounded-xl border border-t-4 shadow-sm ${color} ${
         onClick
           ? "cursor-pointer hover:shadow-md"
           : ""
       }`}
     >
-
       <p className="text-sm text-gray-500">
         {title}
       </p>
 
-      <p className="text-2xl font-bold text-gray-900 mt-2">
+      <p className="text-2xl font-bold mt-2">
         {value}
       </p>
 
       <p className="text-xs text-gray-500 mt-2">
         {trend}
       </p>
-
     </div>
   );
 }
 
-// =========================
+// =====================================================
 // ORDERS TABLE
-// =========================
+// =====================================================
 
 function OrdersTable({
   orders,
@@ -1332,86 +1492,116 @@ function OrdersTable({
   return (
     <div className="bg-white rounded-xl shadow-sm border overflow-x-auto">
 
-      <table className="w-full text-left min-w-[650px]">
+      <table className="w-full min-w-[700px]">
 
-        <thead>
+        <thead className="bg-gray-50">
+          <tr>
 
-          <tr className="bg-gray-50 text-gray-600 text-xs uppercase border-b">
-
-            <th className="py-3 px-4">
+            <th className="p-4 text-left">
               Order ID
             </th>
 
-            <th className="py-3 px-4">
+            <th className="p-4 text-left">
               Customer
             </th>
 
-            <th className="py-3 px-4">
+            <th className="p-4 text-left">
               Date
             </th>
 
-            <th className="py-3 px-4">
+            <th className="p-4 text-left">
+              Items
+            </th>
+
+            <th className="p-4 text-left">
               Total
             </th>
 
-            <th className="py-3 px-4">
+            <th className="p-4 text-left">
               Status
             </th>
 
           </tr>
-
         </thead>
 
-        <tbody className="divide-y">
+        <tbody>
 
           {orders.map((order) => (
+            <tr
+              key={order.id}
+              className="border-t"
+            >
 
-            <tr key={order.id}>
-
-              <td className="py-4 px-4 font-semibold">
+              <td className="p-4 font-bold">
                 {order.id}
               </td>
 
-              <td className="py-4 px-4">
+              <td className="p-4">
                 {order.customer}
               </td>
 
-              <td className="py-4 px-4 text-gray-500">
-                {order.date}
+              <td className="p-4 text-gray-500">
+                {order.date
+                  ? new Date(
+                      order.date
+                    ).toLocaleDateString(
+                      "en-IN"
+                    )
+                  : "Unknown"}
               </td>
 
-              <td className="py-4 px-4 font-semibold">
+              <td className="p-4">
+                {order.itemsCount !==
+                undefined
+                  ? order.itemsCount
+                  : order.items || 0}
+              </td>
+
+              <td className="p-4 font-bold">
                 ₹
-                {order.total.toFixed(2)}
+                {Number(
+                  order.total || 0
+                ).toFixed(2)}
               </td>
 
-              <td className="py-4 px-4">
+              <td className="p-4">
 
                 <select
-                  value={order.status}
+                  value={
+                    order.status ||
+                    "Confirmed"
+                  }
                   onChange={(e) =>
                     onStatusChange(
                       order.id,
                       e.target.value
                     )
                   }
-                  className="border rounded-lg px-2 py-1 text-sm"
+                  className="border rounded-lg px-3 py-2 text-sm"
                 >
 
-                  <option>
+                  <option value="Pending">
                     Pending
                   </option>
 
-                  <option>
+                  <option value="Confirmed">
+                    Confirmed
+                  </option>
+
+                  <option value="Processing">
                     Processing
                   </option>
 
-                  <option>
+                  <option value="Shipped">
                     Shipped
                   </option>
 
-                  <option>
+                  <option value="Delivered">
                     Delivered
+                  </option>
+
+                  <option value="Cancelled">
+                    Cancelled
                   </option>
 
                 </select>
@@ -1419,7 +1609,6 @@ function OrdersTable({
               </td>
 
             </tr>
-
           ))}
 
         </tbody>
@@ -1430,9 +1619,9 @@ function OrdersTable({
   );
 }
 
-// =========================
+// =====================================================
 // PRODUCT MODAL
-// =========================
+// =====================================================
 
 function ProductModal({
   title,
@@ -1446,17 +1635,17 @@ function ProductModal({
   isEdit,
 }) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
 
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md">
 
-        <h3 className="text-lg font-bold">
+        <h2 className="text-xl font-bold mb-5">
           {title}
-        </h3>
+        </h2>
 
         <form
           onSubmit={onSubmit}
-          className="space-y-4 mt-4"
+          className="space-y-4"
         >
 
           <input
@@ -1476,8 +1665,10 @@ function ProductModal({
           <input
             type="file"
             accept="image/*"
-            onChange={onImageChange}
-            className="w-full text-sm"
+            onChange={
+              onImageChange
+            }
+            className="w-full"
             required={!isEdit}
           />
 
@@ -1485,16 +1676,19 @@ function ProductModal({
             <img
               src={preview}
               alt="Preview"
-              className="w-20 h-20 object-cover rounded-lg"
+              className="w-24 h-24 rounded-lg object-cover"
             />
           )}
 
           <select
-            value={product.category}
+            value={
+              product.category
+            }
             onChange={(e) =>
               setProduct({
                 ...product,
-                category: e.target.value,
+                category:
+                  e.target.value,
               })
             }
             className="w-full border rounded-lg px-3 py-2"
@@ -1524,11 +1718,14 @@ function ProductModal({
               type="number"
               step="0.01"
               placeholder="Price"
-              value={product.price}
+              value={
+                product.price
+              }
               onChange={(e) =>
                 setProduct({
                   ...product,
-                  price: e.target.value,
+                  price:
+                    e.target.value,
                 })
               }
               className="border rounded-lg px-3 py-2"
@@ -1538,11 +1735,14 @@ function ProductModal({
             <input
               type="number"
               placeholder="Stock"
-              value={product.stock}
+              value={
+                product.stock
+              }
               onChange={(e) =>
                 setProduct({
                   ...product,
-                  stock: e.target.value,
+                  stock:
+                    e.target.value,
                 })
               }
               className="border rounded-lg px-3 py-2"
@@ -1584,9 +1784,9 @@ function ProductModal({
   );
 }
 
-// =========================
+// =====================================================
 // SALES BOX
-// =========================
+// =====================================================
 
 function SalesBox({
   title,
@@ -1594,33 +1794,33 @@ function SalesBox({
   labels,
 }) {
   return (
-    <div className="bg-white rounded-xl shadow p-6">
+    <div className="bg-white rounded-xl shadow-sm border p-6">
 
-      <h2 className="text-xl font-bold mb-4">
+      <h2 className="text-xl font-bold mb-5">
         {title}
       </h2>
 
-      {labels.map((label, index) => (
+      {labels.map(
+        (label, index) => (
+          <div
+            key={`${label}-${index}`}
+            className="flex justify-between border-b py-3"
+          >
 
-        <div
-          key={`${label}-${index}`}
-          className="flex justify-between border-b py-2"
-        >
+            <span>
+              {label}
+            </span>
 
-          <span>
-            {label}
-          </span>
+            <span className="font-semibold">
+              ₹
+              {Number(
+                data[index] || 0
+              ).toFixed(2)}
+            </span>
 
-          <span>
-            ₹
-            {Number(
-              data[index] || 0
-            ).toFixed(2)}
-          </span>
-
-        </div>
-
-      ))}
+          </div>
+        )
+      )}
 
     </div>
   );
