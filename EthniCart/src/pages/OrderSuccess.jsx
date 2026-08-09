@@ -2,23 +2,21 @@ import { Link, useLocation } from "react-router-dom";
 import {
   FiCheckCircle,
   FiShoppingBag,
-  FiPackage,
 } from "react-icons/fi";
 
 const OrderSuccess = () => {
-  const { state } = useLocation();
+  const location = useLocation();
 
-  const order = state?.order;
+  const order = location.state?.order;
 
   return (
-    <main className="min-h-screen bg-[#F8F5F0] flex items-center justify-center px-6 py-12">
+    <main className="min-h-screen bg-gray-50 py-16">
 
-      <div className="max-w-2xl w-full">
+      <div className="max-w-2xl mx-auto px-6">
 
-        {/* SUCCESS CARD */}
-        <div className="bg-white rounded-3xl p-8 md:p-12 text-center shadow-sm">
+        <div className="bg-white rounded-3xl p-10 text-center shadow-sm">
 
-          {/* ICON */}
+          {/* Success Icon */}
           <div className="w-20 h-20 mx-auto rounded-full bg-green-50 flex items-center justify-center">
             <FiCheckCircle
               size={45}
@@ -26,67 +24,74 @@ const OrderSuccess = () => {
             />
           </div>
 
-          {/* TITLE */}
-          <p className="text-[#C49A6C] uppercase tracking-[4px] font-semibold mt-7">
-            EthniCart
-          </p>
-
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mt-3">
-            Order Confirmed!
+          <h1 className="text-4xl font-bold text-gray-900 mt-7">
+            Order Placed Successfully!
           </h1>
 
-          <p className="text-gray-500 mt-4 leading-7">
+          <p className="text-gray-500 mt-3">
             Thank you for shopping with EthniCart.
-            Your order has been successfully placed.
           </p>
 
-          {/* ORDER ID */}
-          {order && (
-            <div className="bg-[#F8F5F0] rounded-2xl p-5 mt-8">
+          {/* Order Details */}
+          {order ? (
+            <div className="mt-8 bg-gray-50 rounded-2xl p-6 text-left">
 
-              <div className="flex items-center justify-center gap-2 text-gray-500">
-                <FiPackage />
-                <span>Order ID</span>
+              {/* Order ID */}
+              <div className="flex justify-between">
+                <span className="text-gray-500">
+                  Order ID
+                </span>
+
+                <span className="font-semibold">
+                  {order.id}
+                </span>
               </div>
 
-              <p className="text-xl font-bold text-gray-900 mt-2">
-                {order.id}
-              </p>
+              {/* Payment */}
+              <div className="flex justify-between mt-4">
+                <span className="text-gray-500">
+                  Payment
+                </span>
+
+                <span className="font-semibold uppercase">
+                  {order.payment}
+                </span>
+              </div>
+
+              {/* Total */}
+              <div className="border-t mt-5 pt-5 flex justify-between text-lg font-bold">
+                <span>
+                  Total
+                </span>
+
+                <span>
+                  ₹{order.total.toLocaleString("en-IN")}
+                </span>
+              </div>
 
             </div>
+          ) : (
+            <p className="mt-8 text-gray-500">
+              Your order has been placed successfully.
+            </p>
           )}
 
-          {/* TOTAL */}
-          {order && (
-            <div className="flex justify-between items-center border-t border-gray-200 mt-7 pt-6">
-
-              <span className="text-gray-500">
-                Order Total
-              </span>
-
-              <span className="text-2xl font-bold text-gray-900">
-                ₹{Number(order.total).toLocaleString("en-IN")}
-              </span>
-
-            </div>
-          )}
-
-          {/* BUTTONS */}
+          {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 mt-8">
 
             <Link
               to="/shop"
-              className="flex-1 bg-[#C49A6C] text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#a98259] transition"
+              className="flex-1 bg-[#C49A6C] text-white py-4 rounded-xl font-semibold hover:bg-[#a98259] transition"
             >
-              <FiShoppingBag />
               Continue Shopping
             </Link>
 
             <Link
-              to="/orders"
-              className="flex-1 border border-gray-200 text-gray-700 py-4 rounded-xl font-semibold hover:border-[#C49A6C] hover:text-[#C49A6C] transition"
+              to="/profile"
+              className="flex-1 border border-gray-200 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-50 transition"
             >
-              View My Orders
+              <FiShoppingBag />
+              My Profile
             </Link>
 
           </div>

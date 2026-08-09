@@ -6,9 +6,7 @@ import {
 } from "react-router-dom";
 
 import Navbar from "./components/Layout/Navbar";
-import Footer from "./components/Layout/Footer";
 
-// Pages
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import Cart from "./pages/Cart";
@@ -16,51 +14,34 @@ import Wishlist from "./pages/Wishlist";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Product from "./pages/Product";
-import Checkout from "./pages/Checkout";
-import Orders from "./pages/Orders";
-import OrderDetails from "./pages/OrderDetails";
 import OrderSuccess from "./pages/OrderSuccess";
 
-// Profile
 import Profile from "./components/Home/Profile";
 
-// Authentication
-import ProtectedRoute from "./components/Auth/ProtectedRoute";
-
-// Admin
 import AdminLogin from "./components/Admin/AdminLogin";
 import AdminLayout from "./components/Admin/AdminLayout";
 import AdminProtectedRoute from "./components/Admin/ProtectedRoute";
+import ProtectedRoute from "./components/Auth/ProtectedRoute";
+import Checkout from "./pages/Checkout";
 
-// =========================
-// USER LAYOUT
-// =========================
+
 const UserLayout = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <>
       <Navbar />
-
-      <main className="flex-1">
-        <Outlet />
-      </main>
-
-      <Footer />
-    </div>
+      <Outlet />
+    </>
   );
 };
 
-// =========================
-// APP
-// =========================
+
 function App() {
   return (
     <BrowserRouter>
 
       <Routes>
 
-        {/* =========================
-            USER ROUTES
-        ========================= */}
+        {/* ================= USER ROUTES ================= */}
 
         <Route element={<UserLayout />}>
 
@@ -81,9 +62,8 @@ function App() {
             element={<Register />}
           />
 
-          {/* =========================
-              PROTECTED ROUTES
-          ========================= */}
+
+          {/* ================= PROTECTED ROUTES ================= */}
 
           <Route
             path="/shop"
@@ -131,15 +111,6 @@ function App() {
           />
 
           <Route
-            path="/checkout"
-            element={
-              <ProtectedRoute>
-                <Checkout />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
             path="/order-success"
             element={
               <ProtectedRoute>
@@ -147,30 +118,19 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
-            path="/orders"
-            element={
-              <ProtectedRoute>
-                <Orders />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/orders/:id"
-            element={
-              <ProtectedRoute>
-                <OrderDetails />
-              </ProtectedRoute>
+             path="/checkout"
+             element={
+             <ProtectedRoute>
+              <Checkout />
+             </ProtectedRoute>
             }
           />
 
         </Route>
 
-        {/* =========================
-            ADMIN ROUTES
-        ========================= */}
+
+        {/* ================= ADMIN ROUTES ================= */}
 
         <Route
           path="/admin"
