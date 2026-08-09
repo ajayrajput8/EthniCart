@@ -1,31 +1,73 @@
 import { createContext, useState } from "react";
-
 export const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
+  // =========================
+  // CURRENT LOGGED IN USER
+  // =========================
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("ethnicartUser");
 
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
+  // =========================
   // REGISTER
-  const register = (name, email, password) => {
-    const existingUser = localStorage.getItem("ethnicartUser");
+  // =========================
+  const register = (
+    name,
+    phone,
+    location,
+    email,
+    password
+  ) => {
+    const savedUsers =
+      localStorage.getItem("ethnicartUsers");
+
+    const users = savedUsers
+      ? JSON.parse(savedUsers)
+      : [];
+
+    // Check duplicate email
+    const existingUser = users.find(
+      (item) =>
+        item.email?.toLowerCase() ===
+        email.toLowerCase()
+    );
 
     if (existingUser) {
       return {
         success: false,
-        message: "An account already exists. Please login.",
+        message:
+          "An account with this email already exists. Please login.",
       };
     }
 
+    // Create new user
     const newUser = {
+      id: Date.now(),
       name,
+      phone,
+      location,
       email,
       password,
+      orders: 0,
+      spent: 0,
+      joined: new Date().toLocaleDateString(),
     };
 
+    // Save user in all users
+    const updatedUsers = [
+      ...users,
+      newUser,
+    ];
+
+    localStorage.setItem(
+      "ethnicartUsers",
+      JSON.stringify(updatedUsers)
+    );
+
+    // Save currently logged-in user
     localStorage.setItem(
       "ethnicartUser",
       JSON.stringify(newUser)
@@ -38,42 +80,96 @@ const AuthProvider = ({ children }) => {
     };
   };
 
+  // =========================
   // LOGIN
+  // =========================
   const login = (email, password) => {
-    const savedUser = localStorage.getItem("ethnicartUser");
+    const savedUsers =
+      localStorage.getItem("ethnicartUsers");
 
-    if (!savedUser) {
+    const users = savedUsers
+      ? JSON.parse(savedUsers)
+      : [];
+
+    const storedUser = users.find(
+      (item) =>
+        item.email?.toLowerCase() ===
+          email.toLowerCase() &&
+        item.password === password
+    );
+
+    if (!storedUser) {
       return {
         success: false,
-        message: "Account not found. Please register first.",
+        message: "Invalid email or password.",
       };
     }
 
-    const storedUser = JSON.parse(savedUser);
+    // Save current user
+    localStorage.setItem(
+      "ethnicartUser",
+      JSON.stringify(storedUser)
+    );
 
-    if (
-      storedUser.email === email &&
-      storedUser.password === password
-    ) {
-      setUser(storedUser);
-
-      return {
-        success: true,
-      };
-    }
+    setUser(storedUser);
 
     return {
-      success: false,
-      message: "Invalid email or password.",
+      success: true,
     };
   };
 
+  // =========================
   // LOGOUT
+  // =========================
   const logout = () => {
     localStorage.removeItem("ethnicartUser");
+
     setUser(null);
   };
 
+  // =========================
+  // UPDATE USER
+  // =========================
+  const updateUser = (updatedData) => {
+    if (!user) return;
+
+    const updatedUser = {
+      ...user,
+      ...updatedData,
+    };
+
+    // Update current user
+    setUser(updatedUser);
+
+    localStorage.setItem(
+      "ethnicartUser",
+      JSON.stringify(updatedUser)
+    );
+
+    // Update users list
+    const savedUsers =
+      localStorage.getItem("ethnicartUsers");
+
+    const users = savedUsers
+      ? JSON.parse(savedUsers)
+      : [];
+
+    const updatedUsers = users.map(
+      (item) =>
+        item.id === user.id
+          ? updatedUser
+          : item
+    );
+
+    localStorage.setItem(
+      "ethnicartUsers",
+      JSON.stringify(updatedUsers)
+    );
+  };
+
+  // =========================
+  // PROVIDER
+  // =========================
   return (
     <AuthContext.Provider
       value={{
@@ -81,6 +177,7 @@ const AuthProvider = ({ children }) => {
         register,
         login,
         logout,
+        updateUser,
       }}
     >
       {children}

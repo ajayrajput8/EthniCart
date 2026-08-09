@@ -1,17 +1,37 @@
-import { useContext, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
 import { FiCheckCircle } from "react-icons/fi";
 
 import { CartContext } from "../context/CartContext";
+import { AuthContext } from "../context/AuthContext";
 
 const Checkout = () => {
-  const { cart, clearCart, saveOrder } = useContext(CartContext);
+  const {
+    cart,
+    clearCart,
+    saveOrder,
+  } = useContext(CartContext);
+
+  const {
+    user,
+    updateUser,
+  } = useContext(AuthContext);
 
   const navigate = useNavigate();
 
   // =========================
   // DELIVERY FORM
   // =========================
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -23,23 +43,49 @@ const Checkout = () => {
   });
 
   // =========================
-  // PAYMENT METHOD
+  // PAYMENT
   // =========================
+
   const [payment, setPayment] = useState("cod");
+
+  // =========================
+  // LOAD USER DATA
+  // =========================
+
+  useEffect(() => {
+    if (!user) return;
+
+    setForm((prev) => ({
+      ...prev,
+
+      name: user.name || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      city: user.location || "",
+    }));
+  }, [user]);
 
   // =========================
   // CALCULATE TOTAL
   // =========================
+
   const totalPrice = cart.reduce(
-    (total, item) => total + Number(item.price) * item.quantity,
+    (total, item) =>
+      total +
+      Number(item.price || 0) *
+        Number(item.quantity || 0),
     0
   );
 
   // =========================
-  // HANDLE INPUT CHANGE
+  // INPUT CHANGE
   // =========================
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const {
+      name,
+      value,
+    } = e.target;
 
     setForm((prevForm) => ({
       ...prevForm,
@@ -50,28 +96,95 @@ const Checkout = () => {
   // =========================
   // PLACE ORDER
   // =========================
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    // =========================
+    // CREATE ORDER
+    // =========================
+
     const order = {
       id: "EC" + Date.now(),
+
+      userId: user.id,
+
+      customer: {
+        id: user.id,
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+        city: form.city,
+        state: form.state,
+        pincode: form.pincode,
+      },
+
       date: new Date().toISOString(),
-      status: "Confirmed",
-      total: totalPrice,
+
+      status: "Pending",
+
+      total: Number(totalPrice),
+
       payment: payment,
-      customer: form,
-      items: [...cart],
+
+      items: cart.map((item) => ({
+        ...item,
+        quantity: Number(item.quantity),
+        price: Number(item.price),
+      })),
     };
 
-    console.log("ORDER:", order);
+    console.log(
+      "NEW ORDER:",
+      order
+    );
 
-    // Save order
+    // =========================
+    // SAVE ORDER
+    // =========================
+
     saveOrder(order);
 
-    // Clear cart
+    // =========================
+    // UPDATE CUSTOMER DATA
+    // =========================
+
+    const previousOrders =
+      Number(user.orders || 0);
+
+    const previousSpent =
+      Number(user.spent || 0);
+
+    const updatedUser = {
+      phone: form.phone,
+      location: form.city,
+
+      orders:
+        previousOrders + 1,
+
+      spent:
+        previousSpent +
+        Number(totalPrice),
+    };
+
+    updateUser(updatedUser);
+
+    // =========================
+    // CLEAR CART
+    // =========================
+
     clearCart();
 
-    // Go to success page
+    // =========================
+    // SUCCESS PAGE
+    // =========================
+
     navigate("/order-success", {
       state: {
         order,
@@ -82,9 +195,11 @@ const Checkout = () => {
   // =========================
   // EMPTY CART
   // =========================
+
   if (cart.length === 0) {
     return (
       <main className="min-h-screen bg-[#F8F5F0] flex items-center justify-center px-6">
+
         <div className="bg-white rounded-3xl p-10 text-center shadow-sm max-w-md w-full">
 
           <FiCheckCircle
@@ -108,6 +223,7 @@ const Checkout = () => {
           </Link>
 
         </div>
+
       </main>
     );
   }
@@ -115,11 +231,16 @@ const Checkout = () => {
   // =========================
   // CHECKOUT PAGE
   // =========================
+
   return (
     <main className="min-h-screen bg-[#F8F5F0]">
 
-      {/* HEADER */}
+      {/* =========================
+          HEADER
+      ========================= */}
+
       <section className="bg-white py-14">
+
         <div className="max-w-7xl mx-auto px-6">
 
           <p className="text-[#C49A6C] uppercase tracking-[4px] font-semibold">
@@ -135,14 +256,21 @@ const Checkout = () => {
           </p>
 
         </div>
+
       </section>
 
-      {/* CHECKOUT */}
+      {/* =========================
+          CHECKOUT
+      ========================= */}
+
       <section className="max-w-7xl mx-auto px-6 py-12">
 
         <div className="grid lg:grid-cols-3 gap-10">
 
-          {/* CUSTOMER DETAILS */}
+          {/* =========================
+              CUSTOMER DETAILS
+          ========================= */}
+
           <form
             onSubmit={handleSubmit}
             className="lg:col-span-2 bg-white rounded-2xl p-7 shadow-sm"
@@ -154,6 +282,8 @@ const Checkout = () => {
 
             <div className="grid md:grid-cols-2 gap-5">
 
+              {/* NAME */}
+
               <input
                 type="text"
                 name="name"
@@ -163,6 +293,8 @@ const Checkout = () => {
                 required
                 className="border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#C49A6C]"
               />
+
+              {/* EMAIL */}
 
               <input
                 type="email"
@@ -174,6 +306,8 @@ const Checkout = () => {
                 className="border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#C49A6C]"
               />
 
+              {/* PHONE */}
+
               <input
                 type="tel"
                 name="phone"
@@ -183,6 +317,8 @@ const Checkout = () => {
                 required
                 className="border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#C49A6C]"
               />
+
+              {/* PINCODE */}
 
               <input
                 type="text"
@@ -194,6 +330,8 @@ const Checkout = () => {
                 className="border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#C49A6C]"
               />
 
+              {/* CITY */}
+
               <input
                 type="text"
                 name="city"
@@ -203,6 +341,8 @@ const Checkout = () => {
                 required
                 className="border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#C49A6C]"
               />
+
+              {/* STATE */}
 
               <input
                 type="text"
@@ -217,6 +357,7 @@ const Checkout = () => {
             </div>
 
             {/* ADDRESS */}
+
             <textarea
               name="address"
               placeholder="Full Delivery Address"
@@ -227,7 +368,10 @@ const Checkout = () => {
               className="w-full border border-gray-200 rounded-xl px-4 py-3 mt-5 outline-none focus:ring-2 focus:ring-[#C49A6C]"
             />
 
-            {/* PAYMENT */}
+            {/* =========================
+                PAYMENT
+            ========================= */}
+
             <h2 className="text-2xl font-bold mt-10 mb-5 text-gray-900">
               Payment Method
             </h2>
@@ -235,6 +379,7 @@ const Checkout = () => {
             <div className="space-y-3">
 
               {/* COD */}
+
               <label
                 className={`flex items-center gap-3 border rounded-xl p-4 cursor-pointer transition ${
                   payment === "cod"
@@ -242,20 +387,29 @@ const Checkout = () => {
                     : "border-gray-200"
                 }`}
               >
+
                 <input
                   type="radio"
                   name="payment"
                   value="cod"
-                  checked={payment === "cod"}
-                  onChange={(e) => setPayment(e.target.value)}
+                  checked={
+                    payment === "cod"
+                  }
+                  onChange={(e) =>
+                    setPayment(
+                      e.target.value
+                    )
+                  }
                 />
 
                 <span className="font-medium">
                   Cash on Delivery
                 </span>
+
               </label>
 
               {/* ONLINE */}
+
               <label
                 className={`flex items-center gap-3 border rounded-xl p-4 cursor-pointer transition ${
                   payment === "online"
@@ -263,22 +417,33 @@ const Checkout = () => {
                     : "border-gray-200"
                 }`}
               >
+
                 <input
                   type="radio"
                   name="payment"
                   value="online"
-                  checked={payment === "online"}
-                  onChange={(e) => setPayment(e.target.value)}
+                  checked={
+                    payment === "online"
+                  }
+                  onChange={(e) =>
+                    setPayment(
+                      e.target.value
+                    )
+                  }
                 />
 
                 <span className="font-medium">
                   Online Payment
                 </span>
+
               </label>
 
             </div>
 
-            {/* PLACE ORDER */}
+            {/* =========================
+                PLACE ORDER
+            ========================= */}
+
             <button
               type="submit"
               className="w-full mt-8 bg-[#C49A6C] text-white py-4 rounded-xl font-semibold hover:bg-[#a98259] transition"
@@ -288,7 +453,10 @@ const Checkout = () => {
 
           </form>
 
-          {/* ORDER SUMMARY */}
+          {/* =========================
+              ORDER SUMMARY
+          ========================= */}
+
           <div className="bg-white rounded-2xl p-7 h-fit shadow-sm">
 
             <h2 className="text-2xl font-bold text-gray-900">
@@ -298,6 +466,7 @@ const Checkout = () => {
             <div className="mt-6 space-y-5">
 
               {cart.map((item) => (
+
                 <div
                   key={item.id}
                   className="flex gap-4"
@@ -320,19 +489,25 @@ const Checkout = () => {
                     </p>
 
                     <p className="font-semibold mt-1">
-                      ₹{(
-                        Number(item.price) * item.quantity
-                      ).toLocaleString("en-IN")}
+                      ₹
+                      {(
+                        Number(item.price) *
+                        Number(item.quantity)
+                      ).toLocaleString(
+                        "en-IN"
+                      )}
                     </p>
 
                   </div>
 
                 </div>
+
               ))}
 
             </div>
 
             {/* TOTAL */}
+
             <div className="border-t border-gray-200 mt-7 pt-6 flex justify-between text-xl font-bold">
 
               <span>
@@ -340,7 +515,10 @@ const Checkout = () => {
               </span>
 
               <span>
-                ₹{totalPrice.toLocaleString("en-IN")}
+                ₹
+                {totalPrice.toLocaleString(
+                  "en-IN"
+                )}
               </span>
 
             </div>
