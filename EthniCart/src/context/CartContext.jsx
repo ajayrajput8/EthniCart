@@ -5,9 +5,7 @@ export const CartContext = createContext();
 const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
 
-  // =========================
-  // ADD TO CART
-  // =========================
+  // Add Product
   const addToCart = (product) => {
     const existingProduct = cart.find(
       (item) => item.id === product.id
@@ -35,9 +33,7 @@ const CartProvider = ({ children }) => {
     }
   };
 
-  // =========================
-  // DECREASE QUANTITY
-  // =========================
+  // Decrease Quantity
   const decreaseQuantity = (id) => {
     setCart(
       cart
@@ -53,36 +49,10 @@ const CartProvider = ({ children }) => {
     );
   };
 
-  // =========================
-  // REMOVE PRODUCT
-  // =========================
+  // Remove Product
   const removeFromCart = (id) => {
-    setCart(cart.filter((item) => item.id !== id));
-  };
-
-  // =========================
-  // CLEAR CART
-  // =========================
-  const clearCart = () => {
-    setCart([]);
-  };
-
-  // =========================
-  // SAVE ORDER
-  // =========================
-  const saveOrder = (order) => {
-    const existingOrders = JSON.parse(
-      localStorage.getItem("ethnicartOrders") || "[]"
-    );
-
-    const updatedOrders = [
-      ...existingOrders,
-      order,
-    ];
-
-    localStorage.setItem(
-      "ethnicartOrders",
-      JSON.stringify(updatedOrders)
+    setCart(
+      cart.filter((item) => item.id !== id)
     );
   };
 
@@ -93,8 +63,6 @@ const CartProvider = ({ children }) => {
         addToCart,
         decreaseQuantity,
         removeFromCart,
-        clearCart,
-        saveOrder,
       }}
     >
       {children}
