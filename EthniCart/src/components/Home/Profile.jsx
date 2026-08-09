@@ -3,10 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   FiUser,
   FiMail,
+  FiLogOut,
   FiShoppingBag,
   FiHeart,
-  FiLogOut,
-  FiArrowRight,
 } from "react-icons/fi";
 
 import { AuthContext } from "../../context/AuthContext";
@@ -20,141 +19,119 @@ const Profile = () => {
     navigate("/login");
   };
 
+  // If user is not logged in
   if (!user) {
     return (
-      <main className="min-h-screen bg-[#F8F5F0] flex items-center justify-center px-6">
-        <div className="bg-white rounded-3xl p-10 text-center shadow-sm max-w-md w-full">
-          <FiUser
-            size={55}
-            className="mx-auto text-[#C49A6C]"
-          />
+      <main className="min-h-screen bg-gray-50 py-16">
+        <div className="max-w-xl mx-auto px-6">
+          <div className="bg-white rounded-3xl p-10 text-center shadow-sm">
+            <FiUser
+              size={60}
+              className="mx-auto text-gray-300"
+            />
 
-          <h1 className="text-2xl font-bold text-gray-900 mt-5">
-            Please Login
-          </h1>
+            <h1 className="text-3xl font-bold text-gray-900 mt-6">
+              Please Login
+            </h1>
 
-          <p className="text-gray-500 mt-2">
-            Login to access your profile.
-          </p>
+            <p className="text-gray-500 mt-3">
+              Login to access your profile.
+            </p>
 
-          <Link
-            to="/login"
-            className="inline-block mt-6 bg-[#C49A6C] text-white px-7 py-3 rounded-xl font-semibold hover:bg-[#a98259] transition"
-          >
-            Login
-          </Link>
+            <Link
+              to="/login"
+              className="inline-block mt-7 bg-[#C49A6C] text-white px-8 py-3 rounded-xl font-semibold hover:bg-[#a98259] transition"
+            >
+              Login
+            </Link>
+          </div>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#F8F5F0]">
+    <main className="min-h-screen bg-gray-50 py-12">
 
       {/* Header */}
-      <section className="bg-white py-14">
-        <div className="max-w-7xl mx-auto px-6">
-          <p className="text-[#C49A6C] uppercase tracking-[4px] font-semibold">
-            EthniCart
-          </p>
+      <section className="max-w-7xl mx-auto px-6 mb-10">
+        <p className="text-[#C49A6C] uppercase tracking-[4px] font-semibold">
+          EthniCart
+        </p>
 
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mt-3">
-            My Profile
-          </h1>
-
-          <p className="text-gray-500 mt-3">
-            Manage your account and shopping activity.
-          </p>
-        </div>
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mt-3">
+          My Profile
+        </h1>
       </section>
 
-      {/* Profile */}
-      <section className="max-w-7xl mx-auto px-6 py-12">
+      <section className="max-w-7xl mx-auto px-6">
 
         <div className="grid lg:grid-cols-3 gap-8">
 
-          {/* User Card */}
+          {/* Profile Card */}
           <div className="bg-white rounded-3xl p-8 shadow-sm">
 
-            <div className="w-24 h-24 rounded-full bg-[#C49A6C]/10 flex items-center justify-center mx-auto">
-              <FiUser
-                size={42}
-                className="text-[#C49A6C]"
-              />
+            <div className="w-24 h-24 mx-auto rounded-full bg-[#C49A6C] flex items-center justify-center text-white">
+              <FiUser size={42} />
             </div>
 
-            <h2 className="text-2xl font-bold text-center text-gray-900 mt-5">
+            <h2 className="text-2xl font-bold text-gray-900 text-center mt-6">
               {user.name}
             </h2>
 
             <div className="flex items-center justify-center gap-2 text-gray-500 mt-2">
-              <FiMail />
+              <FiMail size={16} />
               <span>{user.email}</span>
             </div>
 
             <button
+              type="button"
               onClick={handleLogout}
               className="w-full mt-8 border border-red-200 text-red-500 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-red-50 transition"
             >
-              <FiLogOut />
+              <FiLogOut size={18} />
               Logout
             </button>
 
           </div>
 
-          {/* Dashboard */}
-          <div className="lg:col-span-2 grid md:grid-cols-2 gap-6">
+          {/* Account Options */}
+          <div className="lg:col-span-2 grid sm:grid-cols-2 gap-6">
 
             {/* Orders */}
             <Link
-              to="/orders"
-              className="bg-white rounded-3xl p-7 shadow-sm hover:-translate-y-1 transition"
+              to="/cart"
+              className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-md transition group"
             >
-              <div className="w-14 h-14 rounded-2xl bg-[#C49A6C]/10 flex items-center justify-center">
-                <FiShoppingBag
-                  size={25}
-                  className="text-[#C49A6C]"
-                />
+              <div className="w-14 h-14 rounded-2xl bg-[#C49A6C]/10 flex items-center justify-center text-[#C49A6C] group-hover:bg-[#C49A6C] group-hover:text-white transition">
+                <FiShoppingBag size={26} />
               </div>
 
-              <h2 className="text-xl font-bold mt-6">
+              <h2 className="text-xl font-bold text-gray-900 mt-6">
                 My Orders
               </h2>
 
               <p className="text-gray-500 mt-2">
-                View your previous orders and order details.
+                View your cart and shopping activity.
               </p>
-
-              <div className="flex items-center gap-2 text-[#C49A6C] font-semibold mt-5">
-                View Orders
-                <FiArrowRight />
-              </div>
             </Link>
 
             {/* Wishlist */}
             <Link
               to="/wishlist"
-              className="bg-white rounded-3xl p-7 shadow-sm hover:-translate-y-1 transition"
+              className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-md transition group"
             >
-              <div className="w-14 h-14 rounded-2xl bg-[#C49A6C]/10 flex items-center justify-center">
-                <FiHeart
-                  size={25}
-                  className="text-[#C49A6C]"
-                />
+              <div className="w-14 h-14 rounded-2xl bg-[#C49A6C]/10 flex items-center justify-center text-[#C49A6C] group-hover:bg-[#C49A6C] group-hover:text-white transition">
+                <FiHeart size={26} />
               </div>
 
-              <h2 className="text-xl font-bold mt-6">
-                My Wishlist
+              <h2 className="text-xl font-bold text-gray-900 mt-6">
+                Wishlist
               </h2>
 
               <p className="text-gray-500 mt-2">
-                View products you have saved for later.
+                View products you have saved.
               </p>
-
-              <div className="flex items-center gap-2 text-[#C49A6C] font-semibold mt-5">
-                View Wishlist
-                <FiArrowRight />
-              </div>
             </Link>
 
           </div>
@@ -162,6 +139,7 @@ const Profile = () => {
         </div>
 
       </section>
+
     </main>
   );
 };
