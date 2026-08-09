@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   FiHeart,
   FiShoppingBag,
@@ -21,57 +21,70 @@ const Wishlist = () => {
   const { addToCart } = useContext(CartContext);
   const { user } = useContext(AuthContext);
 
-  const navigate = useNavigate();
-
   // =========================
   // ADD TO CART
   // =========================
   const handleAddToCart = (product) => {
     if (!user) {
-      navigate("/login", {
-        state: {
-          from: "/wishlist",
-        },
-      });
-
       return;
     }
 
     addToCart(product);
-
-    alert("Product added to cart!");
+    removeFromWishlist(product.id);
   };
 
-  // =========================
-  // EMPTY WISHLIST
-  // =========================
-  if (wishlist.length === 0) {
-    return (
-      <main className="min-h-screen bg-[#F8F5F0]">
+  return (
+    <main className="min-h-screen bg-[#F8F5F0]">
 
-        {/* Header */}
-        <section className="bg-white py-14">
-          <div className="max-w-7xl mx-auto px-6">
+      {/* =========================
+          HEADER
+      ========================= */}
+      <section className="bg-white py-14">
+        <div className="max-w-7xl mx-auto px-6">
 
-            <p className="text-[#C49A6C] uppercase tracking-[4px] font-semibold">
-              EthniCart
-            </p>
+          <p className="text-[#C49A6C] uppercase tracking-[4px] font-semibold">
+            EthniCart
+          </p>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mt-3">
-              My Wishlist
-            </h1>
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
 
-            <p className="text-gray-500 mt-3">
-              Products you save for later will appear here.
-            </p>
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mt-3">
+                My Wishlist
+              </h1>
+
+              <p className="text-gray-500 mt-3">
+                Save your favorite products and shop them later.
+              </p>
+            </div>
+
+            {wishlist.length > 0 && (
+              <button
+                type="button"
+                onClick={clearWishlist}
+                className="flex items-center justify-center gap-2 border border-red-200 text-red-500 px-5 py-3 rounded-xl font-semibold hover:bg-red-50 transition"
+              >
+                <FiTrash2 />
+                Clear Wishlist
+              </button>
+            )}
 
           </div>
-        </section>
 
-        {/* Empty Wishlist */}
-        <section className="max-w-5xl mx-auto px-6 py-16">
+        </div>
+      </section>
 
-          <div className="bg-white rounded-3xl p-12 text-center shadow-sm">
+      {/* =========================
+          WISHLIST
+      ========================= */}
+      <section className="max-w-7xl mx-auto px-6 py-12">
+
+        {wishlist.length === 0 ? (
+
+          /* =========================
+             EMPTY WISHLIST
+          ========================= */
+          <div className="bg-white rounded-3xl p-12 text-center shadow-sm max-w-2xl mx-auto">
 
             <div className="w-20 h-20 mx-auto rounded-full bg-[#C49A6C]/10 flex items-center justify-center">
               <FiHeart
@@ -85,7 +98,7 @@ const Wishlist = () => {
             </h2>
 
             <p className="text-gray-500 mt-2">
-              Save your favorite products here and buy them later.
+              You haven't added any products to your wishlist yet.
             </p>
 
             <Link
@@ -93,177 +106,116 @@ const Wishlist = () => {
               className="inline-flex items-center gap-2 mt-7 bg-[#C49A6C] text-white px-7 py-3 rounded-xl font-semibold hover:bg-[#a98259] transition"
             >
               <FiShoppingBag />
-              Start Shopping
+              Explore Products
             </Link>
 
           </div>
 
-          <Link
-            to="/profile"
-            className="inline-flex items-center gap-2 mt-8 text-gray-600 font-semibold hover:text-[#C49A6C] transition"
-          >
-            <FiArrowLeft />
-            Back to Profile
-          </Link>
+        ) : (
 
-        </section>
+          /* =========================
+             WISHLIST PRODUCTS
+          ========================= */
+          <>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
-      </main>
-    );
-  }
+              {wishlist.map((product) => (
 
-  // =========================
-  // WISHLIST PAGE
-  // =========================
-  return (
-    <main className="min-h-screen bg-[#F8F5F0]">
-
-      {/* Header */}
-      <section className="bg-white py-14">
-        <div className="max-w-7xl mx-auto px-6">
-
-          <p className="text-[#C49A6C] uppercase tracking-[4px] font-semibold">
-            EthniCart
-          </p>
-
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
-
-            <div>
-
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mt-3">
-                My Wishlist
-              </h1>
-
-              <p className="text-gray-500 mt-3">
-                {wishlist.length}{" "}
-                {wishlist.length === 1 ? "product" : "products"} saved.
-              </p>
-
-            </div>
-
-            {/* Clear Wishlist */}
-            <button
-              onClick={clearWishlist}
-              className="self-start md:self-auto flex items-center gap-2 border border-red-200 text-red-500 px-5 py-3 rounded-xl font-semibold hover:bg-red-50 transition"
-            >
-              <FiTrash2 />
-              Clear Wishlist
-            </button>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* Wishlist Products */}
-      <section className="max-w-7xl mx-auto px-6 py-12">
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
-
-          {wishlist.map((product) => (
-
-            <div
-              key={product.id}
-              className="bg-white rounded-3xl overflow-hidden shadow-sm group"
-            >
-
-              {/* Image */}
-              <div className="relative h-[350px] overflow-hidden bg-gray-100">
-
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-
-                {/* Remove Wishlist */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    removeFromWishlist(product.id)
-                  }
-                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-[#C49A6C] text-white flex items-center justify-center shadow-md hover:bg-red-500 transition"
-                  title="Remove from wishlist"
+                <div
+                  key={product.id}
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm group"
                 >
-                  <FiHeart
-                    size={19}
-                    className="fill-current"
-                  />
-                </button>
 
-                {/* Badge */}
-                {product.badge && (
-                  <span className="absolute top-4 left-4 bg-[#C49A6C] text-white text-xs font-semibold px-3 py-2 rounded-full">
-                    {product.badge}
-                  </span>
-                )}
+                  {/* IMAGE */}
+                  <div className="relative h-[350px] overflow-hidden bg-gray-100">
 
-              </div>
+                    <Link to={`/product/${product.id}`}>
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </Link>
 
-              {/* Details */}
-              <div className="p-5">
+                    {/* WISHLIST REMOVE */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        removeFromWishlist(product.id)
+                      }
+                      className="absolute top-4 right-4 w-10 h-10 rounded-full bg-[#C49A6C] text-white flex items-center justify-center shadow-md hover:bg-red-500 transition"
+                    >
+                      <FiHeart
+                        size={19}
+                        className="fill-current"
+                      />
+                    </button>
 
-                <p className="text-sm text-gray-400">
-                  {product.category || "Product"}
-                </p>
+                    {/* BADGE */}
+                    {product.badge && (
+                      <span className="absolute top-4 left-4 bg-[#C49A6C] text-white text-xs font-semibold px-3 py-2 rounded-full">
+                        {product.badge}
+                      </span>
+                    )}
 
-                <h2 className="text-lg font-semibold text-gray-900 mt-1">
-                  {product.name}
-                </h2>
+                  </div>
 
-                {/* Price */}
-                <div className="flex items-center gap-3 mt-3">
+                  {/* DETAILS */}
+                  <div className="p-5">
 
-                  <span className="text-xl font-bold text-gray-900">
-                    ₹{Number(product.price || 0).toLocaleString("en-IN")}
-                  </span>
+                    <p className="text-sm text-gray-400">
+                      {product.category}
+                    </p>
 
-                  {product.oldPrice && (
-                    <span className="text-sm text-gray-400 line-through">
-                      ₹{Number(product.oldPrice).toLocaleString("en-IN")}
-                    </span>
-                  )}
+                    <Link to={`/product/${product.id}`}>
+                      <h3 className="text-lg font-semibold text-gray-900 mt-1 hover:text-[#C49A6C] transition">
+                        {product.name}
+                      </h3>
+                    </Link>
+
+                    {/* PRICE */}
+                    <div className="flex items-center gap-3 mt-3">
+
+                      <span className="text-xl font-bold text-gray-900">
+                        ₹{Number(product.price).toLocaleString("en-IN")}
+                      </span>
+
+                      {product.oldPrice && (
+                        <span className="text-sm text-gray-400 line-through">
+                          ₹{Number(product.oldPrice).toLocaleString("en-IN")}
+                        </span>
+                      )}
+
+                    </div>
+
+                    {/* ADD TO CART */}
+                    <button
+                      type="button"
+                      onClick={() => handleAddToCart(product)}
+                      className="w-full mt-5 bg-[#C49A6C] text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#a98259] transition"
+                    >
+                      <FiShoppingBag size={18} />
+                      Add to Cart
+                    </button>
+
+                  </div>
 
                 </div>
 
-                {/* Add To Cart */}
-                <button
-                  type="button"
-                  onClick={() => handleAddToCart(product)}
-                  className="w-full mt-5 bg-[#C49A6C] text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#a98259] transition"
-                >
-                  <FiShoppingBag size={18} />
-                  Add to Cart
-                </button>
-
-                {/* Remove */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    removeFromWishlist(product.id)
-                  }
-                  className="w-full mt-3 border border-gray-200 text-gray-700 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-50 transition"
-                >
-                  <FiTrash2 size={17} />
-                  Remove
-                </button>
-
-              </div>
+              ))}
 
             </div>
 
-          ))}
-
-        </div>
-
-        {/* Back */}
-        <Link
-          to="/profile"
-          className="inline-flex items-center gap-2 mt-10 text-gray-600 font-semibold hover:text-[#C49A6C] transition"
-        >
-          <FiArrowLeft />
-          Back to Profile
-        </Link>
+            {/* BACK TO SHOP */}
+            <Link
+              to="/shop"
+              className="inline-flex items-center gap-2 mt-10 text-gray-600 font-semibold hover:text-[#C49A6C] transition"
+            >
+              <FiArrowLeft />
+              Continue Shopping
+            </Link>
+          </>
+        )}
 
       </section>
 
