@@ -1,59 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import {
+  getProducts,
+  saveProducts,
+} from "../../data/productStorage";
+
 // =====================================================
 // CLOUDINARY
 // =====================================================
 
 const CLOUDINARY_CLOUD_NAME = "dz59agoyk";
 const CLOUDINARY_UPLOAD_PRESET = "ethnicart";
-
-// =====================================================
-// INITIAL PRODUCTS
-// =====================================================
-
-const INITIAL_PRODUCTS = [
-  {
-    id: 101,
-    name: "Oversized Cotton Hoodie",
-    category: "Tops",
-    price: 49.99,
-    stock: 35,
-    sales: 120,
-    image:
-      "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500&auto=format&fit=crop&q=60",
-  },
-  {
-    id: 102,
-    name: "Slim Fit Denim Jeans",
-    category: "Bottoms",
-    price: 59.99,
-    stock: 18,
-    sales: 85,
-    image:
-      "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=500&auto=format&fit=crop&q=60",
-  },
-  {
-    id: 103,
-    name: "Floral Summer Dress",
-    category: "Dresses",
-    price: 39.99,
-    stock: 8,
-    sales: 140,
-    image:
-      "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=500&auto=format&fit=crop&q=60",
-  },
-  {
-    id: 104,
-    name: "Classic Leather Jacket",
-    category: "Outerwear",
-    price: 129.99,
-    stock: 12,
-    sales: 45,
-    image:
-      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&auto=format&fit=crop&q=60",
-  },
-];
 
 // =====================================================
 // INITIAL ORDERS
@@ -117,7 +75,7 @@ export default function AdminLayout() {
   // =====================================================
 
   useEffect(() => {
-    setProducts(INITIAL_PRODUCTS);
+    setProducts(getProducts());
     loadCustomers();
     loadOrders();
   }, []);
@@ -142,11 +100,17 @@ export default function AdminLayout() {
         return;
       }
 
-      const savedOrders = localStorage.getItem("ethnicartOrders");
-      const allOrders = savedOrders ? JSON.parse(savedOrders) : [];
+      const savedOrders =
+        localStorage.getItem("ethnicartOrders");
+
+      const allOrders = savedOrders
+        ? JSON.parse(savedOrders)
+        : [];
 
       const formattedUsers = users.map((user, index) => {
-        const userEmail = String(user.email || "").toLowerCase();
+        const userEmail = String(
+          user.email || ""
+        ).toLowerCase();
 
         const userOrders = allOrders.filter((order) => {
           const orderEmail = String(
@@ -155,20 +119,32 @@ export default function AdminLayout() {
               ""
           ).toLowerCase();
 
-          return orderEmail && orderEmail === userEmail;
+          return (
+            orderEmail &&
+            orderEmail === userEmail
+          );
         });
 
         const spent = userOrders.reduce(
-          (sum, order) => sum + Number(order.total || 0),
+          (sum, order) =>
+            sum + Number(order.total || 0),
           0
         );
 
         return {
           id: user.id || index + 1,
-          name: user.name || "Unknown Customer",
-          email: user.email || "Not provided",
-          phone: user.phone || "Not provided",
-          location: user.location || "Not provided",
+          name:
+            user.name ||
+            "Unknown Customer",
+          email:
+            user.email ||
+            "Not provided",
+          phone:
+            user.phone ||
+            "Not provided",
+          location:
+            user.location ||
+            "Not provided",
           orders:
             user.orders !== undefined
               ? Number(user.orders)
@@ -177,80 +153,103 @@ export default function AdminLayout() {
             user.spent !== undefined
               ? Number(user.spent)
               : spent,
-          joined: user.joined || "Unknown",
+          joined:
+            user.joined ||
+            "Unknown",
         };
       });
 
       setCustomers(formattedUsers);
     } catch (error) {
-      console.error("Failed to load customers:", error);
+      console.error(
+        "Failed to load customers:",
+        error
+      );
+
       setCustomers([]);
     }
   };
 
   // =====================================================
-  // LOAD REAL ORDERS
+  // LOAD ORDERS
   // =====================================================
 
   const loadOrders = () => {
     try {
-      const savedOrders = localStorage.getItem("ethnicartOrders");
+      const savedOrders =
+        localStorage.getItem(
+          "ethnicartOrders"
+        );
 
       if (!savedOrders) {
         setOrders(INITIAL_ORDERS);
         return;
       }
 
-      const storedOrders = JSON.parse(savedOrders);
+      const storedOrders =
+        JSON.parse(savedOrders);
 
       if (!Array.isArray(storedOrders)) {
         setOrders(INITIAL_ORDERS);
         return;
       }
 
-      const formattedOrders = storedOrders.map((order) => {
-        const customerName =
-          order.customer?.name ||
-          order.customerName ||
-          order.name ||
-          order.customer?.email ||
-          order.email ||
-          "Unknown Customer";
-
-        return {
-          ...order,
-
-          id:
-            order.id ||
-            `ORD-${Date.now()}`,
-
-          customer: customerName,
-
-          customerEmail:
+      const formattedOrders =
+        storedOrders.map((order) => {
+          const customerName =
+            order.customer?.name ||
+            order.customerName ||
+            order.name ||
             order.customer?.email ||
-            order.customerEmail ||
             order.email ||
-            "",
+            "Unknown Customer";
 
-          itemsCount: Array.isArray(order.items)
-            ? order.items.length
-            : Number(order.items || 0),
+          return {
+            ...order,
 
-          total: Number(order.total || 0),
+            id:
+              order.id ||
+              `ORD-${Date.now()}`,
 
-          date:
-            order.date ||
-            new Date().toISOString(),
+            customer:
+              customerName,
 
-          status:
-            order.status ||
-            "Confirmed",
-        };
-      });
+            customerEmail:
+              order.customer?.email ||
+              order.customerEmail ||
+              order.email ||
+              "",
 
-      setOrders(formattedOrders.reverse());
+            itemsCount:
+              Array.isArray(order.items)
+                ? order.items.length
+                : Number(
+                    order.items || 0
+                  ),
+
+            total: Number(
+              order.total || 0
+            ),
+
+            date:
+              order.date ||
+              new Date().toISOString(),
+
+            status:
+              order.status ||
+              "Confirmed",
+          };
+        });
+
+      setOrders(
+        formattedOrders.reverse()
+      );
     } catch (error) {
-      console.error("Failed to load orders:", error);
+      console.error(
+        "Failed to load orders:",
+        error
+      );
+
       setOrders(INITIAL_ORDERS);
     }
   };
@@ -270,6 +269,10 @@ export default function AdminLayout() {
     if (tab === "customers") {
       loadCustomers();
     }
+
+    if (tab === "products") {
+      setProducts(getProducts());
+    }
   };
 
   // =====================================================
@@ -285,27 +288,37 @@ export default function AdminLayout() {
   // ORDER STATUS
   // =====================================================
 
-  const handleOrderStatusChange = (orderId, newStatus) => {
+  const handleOrderStatusChange = (
+    orderId,
+    newStatus
+  ) => {
     try {
       const savedOrders =
-        localStorage.getItem("ethnicartOrders");
+        localStorage.getItem(
+          "ethnicartOrders"
+        );
 
       if (!savedOrders) return;
 
-      const originalOrders = JSON.parse(savedOrders);
+      const originalOrders =
+        JSON.parse(savedOrders);
 
-      const updatedOrders = originalOrders.map((order) =>
-        String(order.id) === String(orderId)
-          ? {
-              ...order,
-              status: newStatus,
-            }
-          : order
-      );
+      const updatedOrders =
+        originalOrders.map((order) =>
+          String(order.id) ===
+          String(orderId)
+            ? {
+                ...order,
+                status: newStatus,
+              }
+            : order
+        );
 
       localStorage.setItem(
         "ethnicartOrders",
-        JSON.stringify(updatedOrders)
+        JSON.stringify(
+          updatedOrders
+        )
       );
 
       loadOrders();
@@ -322,63 +335,96 @@ export default function AdminLayout() {
   // =====================================================
 
   const handleDeleteProduct = (id) => {
-    setProducts((currentProducts) =>
-      currentProducts.filter(
-        (product) => product.id !== id
-      )
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this product?"
     );
+
+    if (!confirmed) return;
+
+    setProducts((currentProducts) => {
+      const updatedProducts =
+        currentProducts.filter(
+          (product) =>
+            product.id !== id
+        );
+
+      // SAVE TO LOCAL STORAGE
+      saveProducts(updatedProducts);
+
+      return updatedProducts;
+    });
   };
 
   // =====================================================
   // CLOUDINARY UPLOAD
   // =====================================================
 
-  const uploadImageToCloudinary = async (file) => {
-    if (!file) return "";
+  const uploadImageToCloudinary =
+    async (file) => {
+      if (!file) return "";
 
-    const formData = new FormData();
+      const formData =
+        new FormData();
 
-    formData.append("file", file);
-    formData.append(
-      "upload_preset",
-      CLOUDINARY_UPLOAD_PRESET
-    );
-
-    try {
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
+      formData.append(
+        "file",
+        file
       );
 
-      const data = await response.json();
+      formData.append(
+        "upload_preset",
+        CLOUDINARY_UPLOAD_PRESET
+      );
 
-      if (!response.ok || !data.secure_url) {
-        throw new Error(
-          "Cloudinary upload failed"
+      try {
+        const response =
+          await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+            {
+              method: "POST",
+              body: formData,
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          !response.ok ||
+          !data.secure_url
+        ) {
+          throw new Error(
+            "Cloudinary upload failed"
+          );
+        }
+
+        return data.secure_url;
+      } catch (error) {
+        console.error(
+          "Cloudinary upload error:",
+          error
+        );
+
+        return URL.createObjectURL(
+          file
         );
       }
-
-      return data.secure_url;
-    } catch (error) {
-      console.error(error);
-
-      return URL.createObjectURL(file);
-    }
-  };
+    };
 
   // =====================================================
   // ADD PRODUCT IMAGE
   // =====================================================
 
-  const handleNewImageChange = (e) => {
-    const file = e.target.files?.[0];
+  const handleNewImageChange = (
+    e
+  ) => {
+    const file =
+      e.target.files?.[0];
 
     if (!file) return;
 
     setNewProdFile(file);
+
     setNewProdPreview(
       URL.createObjectURL(file)
     );
@@ -388,7 +434,9 @@ export default function AdminLayout() {
   // ADD PRODUCT
   // =====================================================
 
-  const handleAddProduct = async (e) => {
+  const handleAddProduct = async (
+    e
+  ) => {
     e.preventDefault();
 
     if (
@@ -414,17 +462,33 @@ export default function AdminLayout() {
     const createdProduct = {
       id: Date.now(),
       name: newProd.name,
-      category: newProd.category,
-      price: Number(newProd.price),
-      stock: Number(newProd.stock),
+      category:
+        newProd.category,
+      price: Number(
+        newProd.price
+      ),
+      stock: Number(
+        newProd.stock
+      ),
       sales: 0,
       image: imageUrl,
     };
 
-    setProducts((currentProducts) => [
-      ...currentProducts,
-      createdProduct,
-    ]);
+    // UPDATE + SAVE
+    setProducts(
+      (currentProducts) => {
+        const updatedProducts = [
+          ...currentProducts,
+          createdProduct,
+        ];
+
+        saveProducts(
+          updatedProducts
+        );
+
+        return updatedProducts;
+      }
+    );
 
     setNewProd({
       name: "",
@@ -435,6 +499,7 @@ export default function AdminLayout() {
 
     setNewProdFile(null);
     setNewProdPreview("");
+
     setIsUploading(false);
     setShowAddModal(false);
   };
@@ -443,12 +508,17 @@ export default function AdminLayout() {
   // OPEN EDIT
   // =====================================================
 
-  const handleOpenEditModal = (product) => {
+  const handleOpenEditModal = (
+    product
+  ) => {
     setEditingProd({
       ...product,
     });
 
-    setEditProdPreview(product.image);
+    setEditProdPreview(
+      product.image
+    );
+
     setEditProdFile(null);
     setShowEditModal(true);
   };
@@ -457,12 +527,16 @@ export default function AdminLayout() {
   // EDIT IMAGE
   // =====================================================
 
-  const handleEditImageChange = (e) => {
-    const file = e.target.files?.[0];
+  const handleEditImageChange = (
+    e
+  ) => {
+    const file =
+      e.target.files?.[0];
 
     if (!file) return;
 
     setEditProdFile(file);
+
     setEditProdPreview(
       URL.createObjectURL(file)
     );
@@ -472,118 +546,169 @@ export default function AdminLayout() {
   // UPDATE PRODUCT
   // =====================================================
 
-  const handleUpdateProduct = async (e) => {
-    e.preventDefault();
+  const handleUpdateProduct =
+    async (e) => {
+      e.preventDefault();
 
-    if (
-      !editingProd?.name ||
-      !editingProd?.price
-    ) {
-      return;
-    }
+      if (
+        !editingProd?.name ||
+        !editingProd?.price
+      ) {
+        return;
+      }
 
-    setIsUploading(true);
+      setIsUploading(true);
 
-    let imageUrl = editingProd.image;
+      let imageUrl =
+        editingProd.image;
 
-    if (editProdFile) {
-      imageUrl =
-        await uploadImageToCloudinary(
-          editProdFile
-        );
-    }
+      if (editProdFile) {
+        imageUrl =
+          await uploadImageToCloudinary(
+            editProdFile
+          );
+      }
 
-    setProducts((currentProducts) =>
-      currentProducts.map((product) =>
-        product.id === editingProd.id
-          ? {
-              ...editingProd,
-              price: Number(
-                editingProd.price
-              ),
-              stock: Number(
-                editingProd.stock
-              ),
-              image: imageUrl,
-            }
-          : product
-      )
-    );
+      // UPDATE + SAVE
+      setProducts(
+        (currentProducts) => {
+          const updatedProducts =
+            currentProducts.map(
+              (product) =>
+                product.id ===
+                editingProd.id
+                  ? {
+                      ...editingProd,
+                      price:
+                        Number(
+                          editingProd.price
+                        ),
+                      stock:
+                        Number(
+                          editingProd.stock
+                        ),
+                      image:
+                        imageUrl,
+                    }
+                  : product
+            );
 
-    setIsUploading(false);
-    setShowEditModal(false);
-    setEditingProd(null);
-    setEditProdFile(null);
-    setEditProdPreview("");
-  };
+          saveProducts(
+            updatedProducts
+          );
+
+          return updatedProducts;
+        }
+      );
+
+      setIsUploading(false);
+      setShowEditModal(false);
+      setEditingProd(null);
+      setEditProdFile(null);
+      setEditProdPreview("");
+    };
 
   // =====================================================
   // DASHBOARD
   // =====================================================
 
-  const totalRevenue = orders.reduce(
-    (sum, order) =>
-      sum + Number(order.total || 0),
-    0
-  );
+  const totalRevenue =
+    orders.reduce(
+      (sum, order) =>
+        sum +
+        Number(
+          order.total || 0
+        ),
+      0
+    );
 
-  const totalStock = products.reduce(
-    (sum, product) =>
-      sum + Number(product.stock || 0),
-    0
-  );
+  const totalStock =
+    products.reduce(
+      (sum, product) =>
+        sum +
+        Number(
+          product.stock || 0
+        ),
+      0
+    );
 
   const topSellingProducts = [
     ...products,
   ]
     .sort(
       (a, b) =>
-        Number(b.sales || 0) -
-        Number(a.sales || 0)
+        Number(
+          b.sales || 0
+        ) -
+        Number(
+          a.sales || 0
+        )
     )
     .slice(0, 5);
-
-  const bestProduct =
-    topSellingProducts[0];
 
   // =====================================================
   // SALES DATA
   // =====================================================
 
-  const weekData = Array(7).fill(0);
+  const weekData =
+    Array(7).fill(0);
 
   orders.forEach((order) => {
-    const date = new Date(order.date);
+    const date =
+      new Date(order.date);
 
-    if (!isNaN(date.getTime())) {
-      weekData[date.getDay()] +=
-        Number(order.total || 0);
+    if (
+      !isNaN(
+        date.getTime()
+      )
+    ) {
+      weekData[
+        date.getDay()
+      ] += Number(
+        order.total || 0
+      );
     }
   });
 
-  const monthData = Array(12).fill(0);
+  const monthData =
+    Array(12).fill(0);
 
   orders.forEach((order) => {
-    const date = new Date(order.date);
+    const date =
+      new Date(order.date);
 
-    if (!isNaN(date.getTime())) {
-      monthData[date.getMonth()] +=
-        Number(order.total || 0);
+    if (
+      !isNaN(
+        date.getTime()
+      )
+    ) {
+      monthData[
+        date.getMonth()
+      ] += Number(
+        order.total || 0
+      );
     }
   });
 
   const yearData = {};
 
   orders.forEach((order) => {
-    const date = new Date(order.date);
+    const date =
+      new Date(order.date);
 
-    if (!isNaN(date.getTime())) {
+    if (
+      !isNaN(
+        date.getTime()
+      )
+    ) {
       const year =
         date.getFullYear();
 
       yearData[year] =
         (yearData[year] || 0) +
-        Number(order.total || 0);
+        Number(
+          order.total || 0
+        );
     }
   });
 
@@ -618,7 +743,9 @@ export default function AdminLayout() {
       {isMobileMenuOpen && (
         <div
           onClick={() =>
-            setIsMobileMenuOpen(false)
+            setIsMobileMenuOpen(
+              false
+            )
           }
           className="fixed inset-0 bg-black/50 z-30 md:hidden"
         />
@@ -635,6 +762,7 @@ export default function AdminLayout() {
       >
         <div className="text-xl font-bold border-b border-gray-800 pb-5 mb-5">
           🛍️ EthniCart
+
           <div className="text-xs text-gray-500 mt-1">
             Admin Panel
           </div>
@@ -646,7 +774,8 @@ export default function AdminLayout() {
             label="Dashboard"
             icon="📊"
             active={
-              activeTab === "dashboard"
+              activeTab ===
+              "dashboard"
             }
             onClick={() =>
               handleTabChange(
@@ -658,9 +787,12 @@ export default function AdminLayout() {
           <SidebarBtn
             label="Orders"
             icon="📦"
-            badge={orders.length}
+            badge={
+              orders.length
+            }
             active={
-              activeTab === "orders"
+              activeTab ===
+              "orders"
             }
             onClick={() =>
               handleTabChange(
@@ -672,9 +804,12 @@ export default function AdminLayout() {
           <SidebarBtn
             label="Products"
             icon="🏷️"
-            badge={products.length}
+            badge={
+              products.length
+            }
             active={
-              activeTab === "products"
+              activeTab ===
+              "products"
             }
             onClick={() =>
               handleTabChange(
@@ -686,9 +821,12 @@ export default function AdminLayout() {
           <SidebarBtn
             label="Customers"
             icon="👥"
-            badge={customers.length}
+            badge={
+              customers.length
+            }
             active={
-              activeTab === "customers"
+              activeTab ===
+              "customers"
             }
             onClick={() =>
               handleTabChange(
@@ -701,10 +839,13 @@ export default function AdminLayout() {
             label="Sales"
             icon="📈"
             active={
-              activeTab === "sales"
+              activeTab ===
+              "sales"
             }
             onClick={() =>
-              handleTabChange("sales")
+              handleTabChange(
+                "sales"
+              )
             }
           />
 
@@ -712,7 +853,9 @@ export default function AdminLayout() {
 
         <div className="mt-auto border-t border-gray-800 pt-4">
           <button
-            onClick={handleLogout}
+            onClick={
+              handleLogout
+            }
             className="text-gray-400 hover:text-white text-sm"
           >
             ← Logout
@@ -743,35 +886,44 @@ export default function AdminLayout() {
             DASHBOARD
         ================================================= */}
 
-        {activeTab === "dashboard" && (
+        {activeTab ===
+          "dashboard" && (
           <div className="space-y-8">
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
               <StatCard
                 title="Total Revenue"
-                value={`₹${totalRevenue.toFixed(2)}`}
+                value={`₹${totalRevenue.toFixed(
+                  2
+                )}`}
                 trend="All orders"
                 color="border-emerald-500"
               />
 
               <StatCard
                 title="Total Orders"
-                value={orders.length}
+                value={
+                  orders.length
+                }
                 trend="Store orders"
                 color="border-blue-500"
               />
 
               <StatCard
                 title="Total Products"
-                value={products.length}
+                value={
+                  products.length
+                }
                 trend={`${totalStock} items in stock`}
                 color="border-amber-500"
               />
 
               <StatCard
                 title="Total Customers"
-                value={customers.length}
+                value={
+                  customers.length
+                }
                 trend="Registered users"
                 color="border-purple-500"
               />
@@ -783,12 +935,17 @@ export default function AdminLayout() {
                 Recent Orders
               </h2>
 
-              <OrdersTable
-                orders={orders.slice(0, 5)}
-                onStatusChange={
-                  handleOrderStatusChange
-                }
-              />
+              <div className="bg-white rounded-xl border overflow-x-auto">
+                <OrdersTable
+                  orders={orders.slice(
+                    0,
+                    5
+                  )}
+                  onStatusChange={
+                    handleOrderStatusChange
+                  }
+                />
+              </div>
             </div>
 
           </div>
@@ -798,7 +955,8 @@ export default function AdminLayout() {
             ORDERS
         ================================================= */}
 
-        {activeTab === "orders" && (
+        {activeTab ===
+          "orders" && (
           <div>
 
             <div className="flex justify-between items-center mb-6">
@@ -814,7 +972,9 @@ export default function AdminLayout() {
               </div>
 
               <button
-                onClick={loadOrders}
+                onClick={
+                  loadOrders
+                }
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg"
               >
                 ↻ Refresh
@@ -822,7 +982,8 @@ export default function AdminLayout() {
 
             </div>
 
-            {orders.length === 0 ? (
+            {orders.length ===
+            0 ? (
               <div className="bg-white rounded-xl border p-12 text-center">
                 <div className="text-5xl mb-4">
                   📦
@@ -833,16 +994,20 @@ export default function AdminLayout() {
                 </h3>
 
                 <p className="text-gray-500 mt-2">
-                  Customer orders will appear here.
+                  Customer orders
+                  will appear
+                  here.
                 </p>
               </div>
             ) : (
-              <OrdersTable
-                orders={orders}
-                onStatusChange={
-                  handleOrderStatusChange
-                }
-              />
+              <div className="bg-white rounded-xl border overflow-x-auto">
+                <OrdersTable
+                  orders={orders}
+                  onStatusChange={
+                    handleOrderStatusChange
+                  }
+                />
+              </div>
             )}
 
           </div>
@@ -852,7 +1017,8 @@ export default function AdminLayout() {
             PRODUCTS
         ================================================= */}
 
-        {activeTab === "products" && (
+        {activeTab ===
+          "products" && (
           <div>
 
             <div className="flex justify-between items-center mb-6">
@@ -863,7 +1029,9 @@ export default function AdminLayout() {
 
               <button
                 onClick={() =>
-                  setShowAddModal(true)
+                  setShowAddModal(
+                    true
+                  )
                 }
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg"
               >
@@ -878,6 +1046,7 @@ export default function AdminLayout() {
 
                 <thead className="bg-gray-50">
                   <tr>
+
                     <th className="p-4 text-left">
                       Product
                     </th>
@@ -897,6 +1066,7 @@ export default function AdminLayout() {
                     <th className="p-4 text-right">
                       Actions
                     </th>
+
                   </tr>
                 </thead>
 
@@ -905,7 +1075,9 @@ export default function AdminLayout() {
                   {products.map(
                     (product) => (
                       <tr
-                        key={product.id}
+                        key={
+                          product.id
+                        }
                         className="border-t"
                       >
 
@@ -941,13 +1113,17 @@ export default function AdminLayout() {
                           ₹
                           {Number(
                             product.price
-                          ).toFixed(2)}
+                          ).toFixed(
+                            2
+                          )}
                         </td>
 
                         <td className="p-4">
                           <span
                             className={
-                              product.stock <
+                              Number(
+                                product.stock
+                              ) <
                               10
                                 ? "text-red-600 font-semibold"
                                 : "text-green-600 font-semibold"
@@ -1000,10 +1176,14 @@ export default function AdminLayout() {
 
             </div>
 
+            {/* ADD MODAL */}
+
             {showAddModal && (
               <ProductModal
                 title="Add New Product"
-                product={newProd}
+                product={
+                  newProd
+                }
                 setProduct={
                   setNewProd
                 }
@@ -1027,6 +1207,8 @@ export default function AdminLayout() {
                 isEdit={false}
               />
             )}
+
+            {/* EDIT MODAL */}
 
             {showEditModal &&
               editingProd && (
@@ -1069,7 +1251,8 @@ export default function AdminLayout() {
             CUSTOMERS
         ================================================= */}
 
-        {activeTab === "customers" && (
+        {activeTab ===
+          "customers" && (
           <div>
 
             <div className="flex justify-between items-center mb-6">
@@ -1080,12 +1263,15 @@ export default function AdminLayout() {
                 </h2>
 
                 <p className="text-sm text-gray-500">
-                  Real users registered on EthniCart
+                  Real users registered on
+                  EthniCart
                 </p>
               </div>
 
               <button
-                onClick={loadCustomers}
+                onClick={
+                  loadCustomers
+                }
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg"
               >
                 ↻ Refresh
@@ -1093,7 +1279,8 @@ export default function AdminLayout() {
 
             </div>
 
-            {customers.length === 0 ? (
+            {customers.length ===
+            0 ? (
               <div className="bg-white rounded-xl border p-12 text-center">
 
                 <div className="text-5xl mb-4">
@@ -1105,7 +1292,8 @@ export default function AdminLayout() {
                 </h3>
 
                 <p className="text-gray-500 mt-2">
-                  Registered users will appear here.
+                  Registered users
+                  will appear here.
                 </p>
 
               </div>
@@ -1151,7 +1339,9 @@ export default function AdminLayout() {
                   <tbody>
 
                     {customers.map(
-                      (customer) => (
+                      (
+                        customer
+                      ) => (
                         <tr
                           key={
                             customer.id
@@ -1239,14 +1429,17 @@ export default function AdminLayout() {
             SALES
         ================================================= */}
 
-        {activeTab === "sales" && (
+        {activeTab ===
+          "sales" && (
           <div className="space-y-6">
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
 
               <StatCard
                 title="Monthly Sales"
-                value={`₹${monthData[new Date().getMonth()].toFixed(2)}`}
+                value={`₹${monthData[
+                  new Date().getMonth()
+                ].toFixed(2)}`}
                 trend="Current month"
                 color="border-blue-500"
                 onClick={() =>
@@ -1258,11 +1451,13 @@ export default function AdminLayout() {
 
               <StatCard
                 title="Weekly Sales"
-                value={`₹${weekData.reduce(
-                  (a, b) =>
-                    a + b,
-                  0
-                ).toFixed(2)}`}
+                value={`₹${weekData
+                  .reduce(
+                    (a, b) =>
+                      a + b,
+                    0
+                  )
+                  .toFixed(2)}`}
                 trend="All loaded orders"
                 color="border-green-500"
                 onClick={() =>
@@ -1274,7 +1469,9 @@ export default function AdminLayout() {
 
               <StatCard
                 title="Total Sales"
-                value={`₹${totalRevenue.toFixed(2)}`}
+                value={`₹${totalRevenue.toFixed(
+                  2
+                )}`}
                 trend="All orders"
                 color="border-purple-500"
                 onClick={() =>
@@ -1292,29 +1489,33 @@ export default function AdminLayout() {
                 "weekly",
                 "monthly",
                 "yearly",
-              ].map((type) => (
-                <button
-                  key={type}
-                  onClick={() =>
-                    setSalesView(
+              ].map(
+                (type) => (
+                  <button
+                    key={type}
+                    onClick={() =>
+                      setSalesView(
+                        type
+                      )
+                    }
+                    className={
+                      salesView ===
                       type
-                    )
-                  }
-                  className={
-                    salesView ===
-                    type
-                      ? "bg-blue-600 text-white px-4 py-2 rounded-lg"
-                      : "bg-gray-200 px-4 py-2 rounded-lg"
-                  }
-                >
-                  {type
-                    .charAt(0)
-                    .toUpperCase() +
-                    type.slice(
-                      1
-                    )}
-                </button>
-              ))}
+                        ? "bg-blue-600 text-white px-4 py-2 rounded-lg"
+                        : "bg-gray-200 px-4 py-2 rounded-lg"
+                    }
+                  >
+                    {type
+                      .charAt(
+                        0
+                      )
+                      .toUpperCase() +
+                      type.slice(
+                        1
+                      )}
+                  </button>
+                )
+              )}
 
             </div>
 
@@ -1322,7 +1523,9 @@ export default function AdminLayout() {
               "weekly" && (
               <SalesBox
                 title="Weekly Revenue"
-                data={weekData}
+                data={
+                  weekData
+                }
                 labels={[
                   "Sun",
                   "Mon",
@@ -1379,15 +1582,21 @@ export default function AdminLayout() {
               </h2>
 
               {topSellingProducts.map(
-                (product, index) => (
+                (
+                  product,
+                  index
+                ) => (
                   <div
                     key={
                       product.id
                     }
                     className="flex justify-between border-b py-3"
                   >
+
                     <span>
-                      {index + 1}.{" "}
+                      {index +
+                        1}
+                      .{" "}
                       {
                         product.name
                       }
@@ -1395,10 +1604,12 @@ export default function AdminLayout() {
 
                     <span className="font-bold">
                       {
-                        product.sales
+                        product.sales ||
+                        0
                       }{" "}
                       Sold
                     </span>
+
                   </div>
                 )
               )}
@@ -1490,54 +1701,59 @@ function OrdersTable({
   onStatusChange,
 }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border overflow-x-auto">
+    <table className="w-full min-w-[700px]">
 
-      <table className="w-full min-w-[700px]">
+      <thead className="bg-gray-50">
+        <tr>
 
-        <thead className="bg-gray-50">
-          <tr>
+          <th className="p-4 text-left">
+            Order ID
+          </th>
 
-            <th className="p-4 text-left">
-              Order ID
-            </th>
+          <th className="p-4 text-left">
+            Customer
+          </th>
 
-            <th className="p-4 text-left">
-              Customer
-            </th>
+          <th className="p-4 text-left">
+            Date
+          </th>
 
-            <th className="p-4 text-left">
-              Date
-            </th>
+          <th className="p-4 text-left">
+            Items
+          </th>
 
-            <th className="p-4 text-left">
-              Items
-            </th>
+          <th className="p-4 text-left">
+            Total
+          </th>
 
-            <th className="p-4 text-left">
-              Total
-            </th>
+          <th className="p-4 text-left">
+            Status
+          </th>
 
-            <th className="p-4 text-left">
-              Status
-            </th>
+        </tr>
+      </thead>
 
-          </tr>
-        </thead>
+      <tbody>
 
-        <tbody>
-
-          {orders.map((order) => (
+        {orders.map(
+          (order) => (
             <tr
-              key={order.id}
+              key={
+                order.id
+              }
               className="border-t"
             >
 
               <td className="p-4 font-bold">
-                {order.id}
+                {
+                  order.id
+                }
               </td>
 
               <td className="p-4">
-                {order.customer}
+                {
+                  order.customer
+                }
               </td>
 
               <td className="p-4 text-gray-500">
@@ -1554,14 +1770,18 @@ function OrdersTable({
                 {order.itemsCount !==
                 undefined
                   ? order.itemsCount
-                  : order.items || 0}
+                  : order.items ||
+                    0}
               </td>
 
               <td className="p-4 font-bold">
                 ₹
                 {Number(
-                  order.total || 0
-                ).toFixed(2)}
+                  order.total ||
+                    0
+                ).toFixed(
+                  2
+                )}
               </td>
 
               <td className="p-4">
@@ -1571,10 +1791,13 @@ function OrdersTable({
                     order.status ||
                     "Confirmed"
                   }
-                  onChange={(e) =>
+                  onChange={(
+                    e
+                  ) =>
                     onStatusChange(
                       order.id,
-                      e.target.value
+                      e.target
+                        .value
                     )
                   }
                   className="border rounded-lg px-3 py-2 text-sm"
@@ -1609,13 +1832,12 @@ function OrdersTable({
               </td>
 
             </tr>
-          ))}
+          )
+        )}
 
-        </tbody>
+      </tbody>
 
-      </table>
-
-    </div>
+    </table>
   );
 }
 
@@ -1637,7 +1859,7 @@ function ProductModal({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
 
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
 
         <h2 className="text-xl font-bold mb-5">
           {title}
@@ -1651,11 +1873,14 @@ function ProductModal({
           <input
             type="text"
             placeholder="Product Name"
-            value={product.name}
+            value={
+              product.name
+            }
             onChange={(e) =>
               setProduct({
                 ...product,
-                name: e.target.value,
+                name: e.target
+                  .value,
               })
             }
             className="w-full border rounded-lg px-3 py-2"
@@ -1717,6 +1942,7 @@ function ProductModal({
             <input
               type="number"
               step="0.01"
+              min="0"
               placeholder="Price"
               value={
                 product.price
@@ -1725,7 +1951,8 @@ function ProductModal({
                 setProduct({
                   ...product,
                   price:
-                    e.target.value,
+                    e.target
+                      .value,
                 })
               }
               className="border rounded-lg px-3 py-2"
@@ -1734,6 +1961,7 @@ function ProductModal({
 
             <input
               type="number"
+              min="0"
               placeholder="Stock"
               value={
                 product.stock
@@ -1742,7 +1970,8 @@ function ProductModal({
                 setProduct({
                   ...product,
                   stock:
-                    e.target.value,
+                    e.target
+                      .value,
                 })
               }
               className="border rounded-lg px-3 py-2"
@@ -1756,7 +1985,9 @@ function ProductModal({
             <button
               type="button"
               onClick={onClose}
-              disabled={uploading}
+              disabled={
+                uploading
+              }
               className="bg-gray-100 px-4 py-2 rounded-lg"
             >
               Cancel
@@ -1764,7 +1995,9 @@ function ProductModal({
 
             <button
               type="submit"
-              disabled={uploading}
+              disabled={
+                uploading
+              }
               className="bg-blue-600 text-white px-4 py-2 rounded-lg"
             >
               {uploading
@@ -1794,7 +2027,7 @@ function SalesBox({
   labels,
 }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-6">
+    <div className="bg-white rounded-xl border p-6">
 
       <h2 className="text-xl font-bold mb-5">
         {title}
@@ -1814,7 +2047,8 @@ function SalesBox({
             <span className="font-semibold">
               ₹
               {Number(
-                data[index] || 0
+                data[index] ||
+                  0
               ).toFixed(2)}
             </span>
 

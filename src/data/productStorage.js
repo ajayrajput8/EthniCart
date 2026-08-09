@@ -9,7 +9,11 @@ export const getProducts = () => {
     return JSON.parse(savedProducts);
   }
 
-  localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(products));
+  localStorage.setItem(
+    PRODUCT_STORAGE_KEY,
+    JSON.stringify(products)
+  );
+
   return products;
 };
 
