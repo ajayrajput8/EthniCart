@@ -13,7 +13,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const [form, setForm] = useState({
-    email: "",
+    phone: "",
     password: "",
   });
 
@@ -32,7 +32,7 @@ const Login = () => {
     e.preventDefault();
 
     const result = login(
-      form.email,
+      form.phone,
       form.password
     );
 
@@ -56,7 +56,7 @@ const Login = () => {
         <div className="hidden md:flex relative">
 
           <img
-            src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80"
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQw4wtJiH6LNxHgMWzwHA-TslLttwgZsNNAN2QE-eBeHw&s=10"
             alt="Fashion"
             className="w-full h-full object-cover"
           />
@@ -111,18 +111,18 @@ const Login = () => {
               className="space-y-6"
             >
 
-              {/* Email */}
+              {/* Phone Number */}
               <div>
 
                 <label className="block mb-2 font-medium text-gray-700">
-                  Email Address
+                  Phone Number
                 </label>
 
                 <input
-                  type="email"
-                  name="email"
-                  placeholder="Enter your email"
-                  value={form.email}
+                  type="phone"
+                  name="phone"
+                  placeholder="Enter your phone number"
+                  value={form.phone}
                   onChange={handleChange}
                   required
                   className="w-full border border-gray-300 rounded-xl px-5 py-4 outline-none focus:ring-2 focus:ring-[#C49A6C]"
@@ -184,13 +184,6 @@ const Login = () => {
 
                 </label>
 
-                <Link
-                  to="/forgot-password"
-                  className="text-[#C49A6C] hover:underline"
-                >
-                  Forgot Password?
-                </Link>
-
               </div>
 
               {/* Login */}
@@ -216,13 +209,7 @@ const Login = () => {
 
             </div>
 
-            {/* Google */}
-            <button
-              type="button"
-              className="w-full border border-gray-300 rounded-xl py-4 font-medium hover:bg-gray-100 transition"
-            >
-              Continue with Google
-            </button>
+          
 
             {/* Register */}
             <p className="text-center mt-8 text-gray-600">

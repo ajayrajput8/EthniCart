@@ -6,15 +6,15 @@ import { AuthContext } from "../context/AuthContext";
 
 const Register = () => {
   const { register } = useContext(AuthContext);
-
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
+    phone: "",
+    location: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -33,21 +33,27 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError("");
 
+    // Password match
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
+    // Password length
     if (form.password.length < 6) {
       setError("Password must be at least 6 characters.");
       return;
     }
 
+    // Register user
     const result = register(
       form.name,
       form.email,
-      form.password
+      form.password,
+      form.phone,
+      form.location
     );
 
     if (!result.success) {
@@ -55,19 +61,23 @@ const Register = () => {
       return;
     }
 
+    // Registration successful
     navigate("/shop");
   };
 
   return (
-    <section className="min-h-screen bg-[#FAF7F2] flex items-center justify-center px-6 py-10">
+    <section className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-10">
 
       <div className="w-full max-w-6xl bg-white rounded-3xl overflow-hidden shadow-lg grid md:grid-cols-2 min-h-[700px]">
 
-        {/* Left Side */}
+        {/* =========================
+            LEFT SIDE
+        ========================= */}
+
         <div className="hidden md:flex relative">
 
           <img
-            src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1000&q=80"
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHgjoXb_2hmfLkbt5yaKi4My7PKTjV2CAsT7FDxS5bSg&s=10"
             alt="Ethnic Fashion"
             className="w-full h-full object-cover"
           />
@@ -93,12 +103,16 @@ const Register = () => {
 
         </div>
 
-        {/* Right Side */}
+        {/* =========================
+            RIGHT SIDE
+        ========================= */}
+
         <div className="p-8 md:p-14 flex items-center">
 
           <div className="w-full">
 
             {/* Heading */}
+
             <div className="mb-8">
 
               <h2 className="text-4xl font-bold text-gray-800">
@@ -112,6 +126,7 @@ const Register = () => {
             </div>
 
             {/* Error */}
+
             {error && (
               <div className="mb-6 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-600 text-sm">
                 {error}
@@ -123,7 +138,10 @@ const Register = () => {
               className="space-y-5"
             >
 
-              {/* Name */}
+              {/* =========================
+                  NAME
+              ========================= */}
+
               <div>
 
                 <label className="block mb-2 font-medium text-gray-700">
@@ -142,7 +160,54 @@ const Register = () => {
 
               </div>
 
-              {/* Email */}
+              {/* =========================
+                  PHONE
+              ========================= */}
+
+              <div>
+
+                <label className="block mb-2 font-medium text-gray-700">
+                  Phone Number
+                </label>
+
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="Enter your phone number"
+                  value={form.phone}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 rounded-xl px-5 py-4 outline-none focus:ring-2 focus:ring-[#C49A6C]"
+                />
+
+              </div>
+
+              {/* =========================
+                  LOCATION
+              ========================= */}
+
+              <div>
+
+                <label className="block mb-2 font-medium text-gray-700">
+                  Location
+                </label>
+
+                <input
+                  type="text"
+                  name="location"
+                  placeholder="Enter your city / location"
+                  value={form.location}
+                  onChange={handleChange}
+                  required
+                  className="w-full border border-gray-300 rounded-xl px-5 py-4 outline-none focus:ring-2 focus:ring-[#C49A6C]"
+                />
+
+              </div>
+
+              {/* =========================
+                  EMAIL
+              ========================= */}
+
               <div>
 
                 <label className="block mb-2 font-medium text-gray-700">
@@ -161,7 +226,10 @@ const Register = () => {
 
               </div>
 
-              {/* Password */}
+              {/* =========================
+                  PASSWORD
+              ========================= */}
+
               <div>
 
                 <label className="block mb-2 font-medium text-gray-700">
@@ -171,11 +239,7 @@ const Register = () => {
                 <div className="relative">
 
                   <input
-                    type={
-                      showPassword
-                        ? "text"
-                        : "password"
-                    }
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     placeholder="Create a password"
                     value={form.password}
@@ -191,18 +255,17 @@ const Register = () => {
                     }
                     className="absolute right-5 top-1/2 -translate-y-1/2 text-xl text-gray-500"
                   >
-                    {showPassword ? (
-                      <FiEyeOff />
-                    ) : (
-                      <FiEye />
-                    )}
+                    {showPassword ? <FiEyeOff /> : <FiEye />}
                   </button>
 
                 </div>
 
               </div>
 
-              {/* Confirm Password */}
+              {/* =========================
+                  CONFIRM PASSWORD
+              ========================= */}
+
               <div>
 
                 <label className="block mb-2 font-medium text-gray-700">
@@ -245,7 +308,10 @@ const Register = () => {
 
               </div>
 
-              {/* Register */}
+              {/* =========================
+                  REGISTER BUTTON
+              ========================= */}
+
               <button
                 type="submit"
                 className="w-full bg-[#C49A6C] hover:bg-[#b78958] text-white py-4 rounded-xl font-semibold transition"
@@ -255,7 +321,10 @@ const Register = () => {
 
             </form>
 
-            {/* Login */}
+            {/* =========================
+                LOGIN
+            ========================= */}
+
             <p className="text-center mt-8 text-gray-600">
 
               Already have an account?{" "}
