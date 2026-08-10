@@ -31,7 +31,7 @@ const Register = () => {
     setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -48,12 +48,12 @@ const Register = () => {
     }
 
     // Register user
-    const result = register(
+    const result = await register(
       form.name,
-      form.email,
-      form.password,
       form.phone,
-      form.location
+      form.location,
+      form.email,
+      form.password
     );
 
     if (!result.success) {
