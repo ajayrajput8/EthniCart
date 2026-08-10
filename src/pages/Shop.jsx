@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   FiChevronDown,
   FiSearch,
@@ -7,14 +7,44 @@ import {
 } from "react-icons/fi";
 
 import ProductCard from "../components/Product/ProductCard";
-import products from "../data/products";
+//import products from "../data/products";
+
+const API_URL = "http://localhost:8000/api";
 
 const Shop = () => {
+  const [products, setProducts] = useState([]);
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("default");
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true); 
+  const [error, setError] = useState("");
 
   const categories = ["All", "Kurtas", "Sarees", "Lehengas"];
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch(`${API_URL}/products`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch products");
+        }
+
+        setProducts(data.products || []);
+      } catch (error) {
+        console.error("Product fetch error:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const filteredProducts = useMemo(() => {
     return [...products]
@@ -42,13 +72,71 @@ const Shop = () => {
 
         return 0;
       });
-  }, [category, sort, search]);
+  }, [products, category, sort, search]);
 
   const clearFilters = () => {
     setCategory("All");
     setSort("default");
     setSearch("");
   };
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#faf9f7]">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="flex flex-col items-center justify-center">
+            <div className="w-10 h-10 border-4 border-gray-200 border-t-[#C49A6C] rounded-full animate-spin" />
+
+            <p className="text-gray-500 mt-4 text-sm">
+              Loading products...
+            </p>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  // API ERROR
+  if (error) {
+    return (
+      <main className="min-h-screen bg-[#faf9f7]">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="bg-white border border-red-100 rounded-2xl sm:rounded-3xl py-16 px-5 text-center">
+            <div className="w-14 h-14 mx-auto rounded-full bg-red-50 flex items-center justify-center">
+              <FiX size={22} className="text-red-500" />
+            </div>
+
+            <h2 className="text-xl font-bold text-gray-900 mt-5">
+              Unable to load products
+            </h2>
+
+            <p className="text-gray-500 text-sm mt-2">
+              {error}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="
+                mt-6
+                bg-gray-900
+                hover:bg-[#C49A6C]
+                text-white
+                px-6
+                py-3
+                rounded-xl
+                text-sm
+                font-semibold
+                transition
+              "
+            >
+              Try Again
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="bg-[#FAF9F7] min-h-screen">
