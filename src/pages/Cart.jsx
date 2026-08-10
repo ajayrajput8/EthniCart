@@ -64,6 +64,8 @@ import {
   FiTrash2,
   FiShoppingBag,
   FiArrowLeft,
+  FiShield,
+  FiTruck,
 } from "react-icons/fi";
 
 import { CartContext } from "../context/CartContext";
@@ -80,48 +82,52 @@ const Cart = () => {
   // PRICE CALCULATIONS
   // =========================
   const subtotal = cart.reduce(
-    (total, item) => total + Number(item.price) * item.quantity,
+    (total, item) =>
+      total + Number(item.price) * Number(item.quantity),
+    0
+  );
+
+  const totalItems = cart.reduce(
+    (total, item) => total + Number(item.quantity),
     0
   );
 
   const deliveryCharge = subtotal > 0 ? 0 : 0;
-
   const totalPrice = subtotal + deliveryCharge;
 
-  const totalItems = cart.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
-
   return (
-    <main className="bg-[#faf9f7] min-h-screen">
+    <main className="min-h-screen bg-[#faf9f7] text-gray-900">
 
-      {/* =========================
+      {/* =====================================================
           HEADER
-      ========================= */}
-      <section className="bg-white py-14">
-        <div className="max-w-7xl mx-auto px-6">
+      ===================================================== */}
+      <section className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
 
-          <p className="text-[#C49A6C] uppercase tracking-[4px] font-semibold">
-            EthniCart
-          </p>
-
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div className="flex items-center justify-between gap-4">
 
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mt-3">
+              <p className="text-[#C49A6C] text-xs sm:text-sm font-semibold uppercase tracking-[3px]">
+                EthniCart
+              </p>
+
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
                 Shopping Cart
               </h1>
 
-              <p className="text-gray-500 mt-3">
-                Review your selected products before checkout.
-              </p>
+              {cart.length > 0 && (
+                <p className="text-sm text-gray-500 mt-2">
+                  {totalItems}{" "}
+                  {totalItems === 1 ? "item" : "items"} in your cart
+                </p>
+              )}
             </div>
 
             {cart.length > 0 && (
-              <p className="text-gray-500 font-medium">
-                {totalItems} {totalItems === 1 ? "Item" : "Items"}
-              </p>
+              <div className="hidden sm:flex items-center gap-2 text-sm text-gray-500">
+                <FiShoppingBag size={17} />
+                <span>Ready for checkout</span>
+              </div>
             )}
 
           </div>
@@ -129,155 +135,212 @@ const Cart = () => {
         </div>
       </section>
 
-      {/* =========================
-          CART CONTENT
-      ========================= */}
-      <section className="max-w-7xl mx-auto px-6 py-12">
+      {/* =====================================================
+          CONTENT
+      ===================================================== */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7 sm:py-10">
 
+        {/* ===================================================
+            EMPTY CART
+        =================================================== */}
         {cart.length === 0 ? (
 
-          /* =========================
-             EMPTY CART
-          ========================= */
-          <div className="bg-white rounded-3xl shadow-sm text-center py-20 px-6 max-w-2xl mx-auto">
+          <div className="max-w-lg mx-auto">
 
-            <div className="w-20 h-20 mx-auto rounded-full bg-[#C49A6C]/10 flex items-center justify-center">
-              <FiShoppingBag
-                size={40}
-                className="text-[#C49A6C]"
-              />
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm px-6 py-14 sm:py-16 text-center">
+
+              <div className="w-20 h-20 mx-auto rounded-full bg-[#C49A6C]/10 flex items-center justify-center">
+                <FiShoppingBag
+                  size={34}
+                  className="text-[#C49A6C]"
+                />
+              </div>
+
+              <h2 className="text-2xl font-bold text-gray-900 mt-6">
+                Your cart is empty
+              </h2>
+
+              <p className="text-gray-500 text-sm sm:text-base leading-6 mt-3 max-w-sm mx-auto">
+                Looks like you haven't added anything to your cart yet.
+                Explore our collection and find something you love.
+              </p>
+
+              <Link
+                to="/shop"
+                className="inline-flex items-center justify-center gap-2 mt-7 bg-gray-900 hover:bg-[#C49A6C] text-white px-7 py-3.5 rounded-xl font-semibold transition-all duration-300"
+              >
+                <FiShoppingBag size={18} />
+                Continue Shopping
+              </Link>
+
             </div>
-
-            <h2 className="text-2xl font-bold text-gray-900 mt-6">
-              Your Cart is Empty
-            </h2>
-
-            <p className="text-gray-500 mt-3">
-              You haven't added any products to your cart yet.
-            </p>
-
-            <Link
-              to="/shop"
-              className="inline-flex items-center gap-2 mt-7 bg-[#C49A6C] text-white px-7 py-3 rounded-xl font-semibold hover:bg-[#a98259] transition"
-            >
-              <FiShoppingBag size={18} />
-              Continue Shopping
-            </Link>
 
           </div>
 
         ) : (
 
-          <div className="grid lg:grid-cols-3 gap-8 lg:gap-10">
+          <div className="grid lg:grid-cols-[1fr_380px] gap-7 lg:gap-10">
 
-            {/* =========================
-                PRODUCTS
-            ========================= */}
-            <div className="lg:col-span-2 space-y-5">
+            {/* =================================================
+                LEFT — CART ITEMS
+            ================================================= */}
+            <div className="min-w-0">
 
-              {cart.map((item) => (
+              {/* Section heading */}
+              <div className="flex items-center justify-between mb-4">
 
-                <div
-                  key={item.id}
-                  className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100"
-                >
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+                    Your Items
+                  </h2>
 
-                  <div className="flex flex-col sm:flex-row gap-5">
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                    Review your selected products
+                  </p>
+                </div>
 
-                    {/* IMAGE */}
-                    <Link
-                      to={`/product/${item.id}`}
-                      className="shrink-0"
-                    >
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full sm:w-32 h-48 sm:h-40 object-cover rounded-xl"
-                      />
-                    </Link>
+                <span className="text-sm font-medium text-gray-500">
+                  {totalItems} {totalItems === 1 ? "item" : "items"}
+                </span>
 
-                    {/* DETAILS */}
-                    <div className="flex-1 min-w-0">
+              </div>
 
-                      <div className="flex justify-between gap-4">
+              {/* Items */}
+              <div className="space-y-3">
 
-                        <div>
-                          <p className="text-sm text-gray-400">
-                            {item.category}
-                          </p>
+                {cart.map((item) => (
 
-                          <Link to={`/product/${item.id}`}>
-                            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mt-1 hover:text-[#C49A6C] transition">
-                              {item.name}
-                            </h2>
-                          </Link>
-                        </div>
+                  <article
+                    key={item.id}
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 sm:p-4"
+                  >
 
-                        {/* REMOVE */}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            removeFromCart(item.id)
-                          }
-                          className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
-                          aria-label="Remove product"
-                        >
-                          <FiTrash2 size={19} />
-                        </button>
+                    <div className="flex gap-3 sm:gap-5">
 
-                      </div>
+                      {/* IMAGE */}
+                      <Link
+                        to={`/product/${item.id}`}
+                        className="shrink-0"
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-24 h-28 sm:w-32 sm:h-36 object-cover rounded-xl bg-gray-100"
+                        />
+                      </Link>
 
-                      {/* PRICE */}
-                      <p className="text-xl font-bold text-gray-900 mt-4">
-                        ₹{Number(item.price).toLocaleString("en-IN")}
-                      </p>
+                      {/* DETAILS */}
+                      <div className="flex-1 min-w-0">
 
-                      {/* QUANTITY + ITEM TOTAL */}
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-5">
+                        <div className="flex justify-between gap-3">
 
-                        {/* QUANTITY */}
-                        <div className="flex items-center border border-gray-200 rounded-xl w-fit overflow-hidden">
+                          <div className="min-w-0">
 
+                            <p className="text-[10px] sm:text-xs uppercase tracking-wider text-gray-400 font-medium">
+                              {item.category}
+                            </p>
+
+                            <Link to={`/product/${item.id}`}>
+                              <h3 className="text-sm sm:text-lg font-semibold text-gray-900 mt-1 line-clamp-2 hover:text-[#C49A6C] transition">
+                                {item.name}
+                              </h3>
+                            </Link>
+
+                          </div>
+
+                          {/* REMOVE */}
                           <button
                             type="button"
                             onClick={() =>
-                              decreaseQuantity(item.id)
+                              removeFromCart(item.id)
                             }
-                            className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-[#C49A6C] hover:text-white transition"
+                            aria-label={`Remove ${item.name}`}
+                            className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
                           >
-                            <FiMinus size={16} />
+                            <FiTrash2 size={17} />
                           </button>
 
-                          <span className="w-10 text-center font-semibold text-gray-900">
-                            {item.quantity}
+                        </div>
+
+                        {/* PRICE */}
+                        <div className="flex items-center gap-2 mt-2 sm:mt-3">
+
+                          <span className="text-base sm:text-xl font-bold text-gray-900">
+                            ₹
+                            {Number(item.price).toLocaleString(
+                              "en-IN"
+                            )}
                           </span>
 
-                          <button
-                            type="button"
-                            onClick={() =>
-                              addToCart(item)
-                            }
-                            className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-[#C49A6C] hover:text-white transition"
-                          >
-                            <FiPlus size={16} />
-                          </button>
+                          {item.oldPrice && (
+                            <span className="text-xs sm:text-sm text-gray-400 line-through">
+                              ₹
+                              {Number(
+                                item.oldPrice
+                              ).toLocaleString("en-IN")}
+                            </span>
+                          )}
 
                         </div>
 
-                        {/* ITEM TOTAL */}
-                        <div className="text-left sm:text-right">
+                        {/* BOTTOM ROW */}
+                        <div className="flex items-end justify-between gap-3 mt-3 sm:mt-5">
 
-                          <p className="text-xs text-gray-400">
-                            Item Total
-                          </p>
+                          {/* QUANTITY */}
+                          <div>
 
-                          <p className="font-bold text-gray-900 mt-1">
-                            ₹
-                            {(
-                              Number(item.price) *
-                              item.quantity
-                            ).toLocaleString("en-IN")}
-                          </p>
+                            <p className="hidden sm:block text-xs text-gray-400 mb-1.5">
+                              Quantity
+                            </p>
+
+                            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white">
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  decreaseQuantity(item.id)
+                                }
+                                aria-label="Decrease quantity"
+                                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-gray-600 hover:bg-gray-50 hover:text-[#C49A6C] transition"
+                              >
+                                <FiMinus size={14} />
+                              </button>
+
+                              <span className="w-8 sm:w-9 text-center text-sm font-semibold text-gray-900">
+                                {item.quantity}
+                              </span>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  addToCart(item)
+                                }
+                                aria-label="Increase quantity"
+                                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-gray-600 hover:bg-gray-50 hover:text-[#C49A6C] transition"
+                              >
+                                <FiPlus size={14} />
+                              </button>
+
+                            </div>
+
+                          </div>
+
+                          {/* ITEM TOTAL */}
+                          <div className="text-right">
+
+                            <p className="text-[10px] sm:text-xs text-gray-400">
+                              Item Total
+                            </p>
+
+                            <p className="text-sm sm:text-base font-bold text-gray-900 mt-0.5">
+                              ₹
+                              {(
+                                Number(item.price) *
+                                Number(item.quantity)
+                              ).toLocaleString("en-IN")}
+                            </p>
+
+                          </div>
 
                         </div>
 
@@ -285,95 +348,137 @@ const Cart = () => {
 
                     </div>
 
-                  </div>
+                  </article>
 
-                </div>
+                ))}
 
-              ))}
+              </div>
 
               {/* CONTINUE SHOPPING */}
               <Link
                 to="/shop"
-                className="inline-flex items-center gap-2 text-gray-600 font-semibold hover:text-[#C49A6C] transition pt-2"
+                className="inline-flex items-center gap-2 mt-6 text-sm font-semibold text-gray-600 hover:text-[#C49A6C] transition"
               >
-                <FiArrowLeft size={18} />
+                <FiArrowLeft size={16} />
                 Continue Shopping
               </Link>
 
             </div>
 
-            {/* =========================
-                ORDER SUMMARY
-            ========================= */}
-            <div className="lg:col-span-1">
+            {/* =================================================
+                RIGHT — ORDER SUMMARY
+            ================================================= */}
+            <aside>
 
-              <div className="bg-white rounded-2xl p-6 sm:p-7 shadow-sm border border-gray-100 lg:sticky lg:top-6">
+              <div className="lg:sticky lg:top-6">
 
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Order Summary
-                </h2>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
 
-                {/* ITEMS */}
-                <div className="flex justify-between mt-7 text-gray-600">
-                  <span>Items</span>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Order Summary
+                  </h2>
 
-                  <span>
-                    {totalItems}
-                  </span>
-                </div>
+                  {/* SUMMARY */}
+                  <div className="space-y-4 mt-6">
 
-                {/* SUBTOTAL */}
-                <div className="flex justify-between mt-4 text-gray-600">
-                  <span>Subtotal</span>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">
+                        Items
+                      </span>
 
-                  <span>
-                    ₹{subtotal.toLocaleString("en-IN")}
-                  </span>
-                </div>
+                      <span className="font-medium text-gray-900">
+                        {totalItems}
+                      </span>
+                    </div>
 
-                {/* DELIVERY */}
-                <div className="flex justify-between mt-4 text-gray-600">
-                  <span>Delivery</span>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">
+                        Subtotal
+                      </span>
 
-                  <span className="text-green-600 font-medium">
-                    Free
-                  </span>
-                </div>
+                      <span className="font-medium text-gray-900">
+                        ₹{subtotal.toLocaleString("en-IN")}
+                      </span>
+                    </div>
 
-                {/* DIVIDER */}
-                <div className="border-t border-gray-200 mt-6 pt-6">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">
+                        Delivery
+                      </span>
 
-                  <div className="flex justify-between items-center">
-
-                    <span className="text-xl font-bold text-gray-900">
-                      Total
-                    </span>
-
-                    <span className="text-2xl font-bold text-[#C49A6C]">
-                      ₹{totalPrice.toLocaleString("en-IN")}
-                    </span>
+                      <span className="font-semibold text-green-600">
+                        Free
+                      </span>
+                    </div>
 
                   </div>
 
+                  {/* TOTAL */}
+                  <div className="border-t border-gray-100 mt-6 pt-5">
+
+                    <div className="flex items-center justify-between">
+
+                      <span className="text-lg font-bold text-gray-900">
+                        Total
+                      </span>
+
+                      <span className="text-xl sm:text-2xl font-bold text-[#C49A6C]">
+                        ₹{totalPrice.toLocaleString("en-IN")}
+                      </span>
+
+                    </div>
+
+                  </div>
+
+                  {/* CHECKOUT */}
+                  <Link
+                    to="/checkout"
+                    className="mt-6 w-full bg-gray-900 hover:bg-[#C49A6C] text-white py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300"
+                  >
+                    <FiShoppingBag size={18} />
+                    Proceed to Checkout
+                  </Link>
+
+                  {/* TRUST */}
+                  <div className="grid grid-cols-2 gap-3 mt-5">
+
+                    <div className="bg-[#faf9f7] rounded-xl p-3">
+
+                      <FiTruck
+                        size={18}
+                        className="text-[#C49A6C]"
+                      />
+
+                      <p className="text-xs font-semibold text-gray-700 mt-2">
+                        Free Delivery
+                      </p>
+
+                    </div>
+
+                    <div className="bg-[#faf9f7] rounded-xl p-3">
+
+                      <FiShield
+                        size={18}
+                        className="text-[#C49A6C]"
+                      />
+
+                      <p className="text-xs font-semibold text-gray-700 mt-2">
+                        Secure Checkout
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                  <p className="text-center text-[11px] text-gray-400 mt-5">
+                    Easy returns · Secure payment · Trusted shopping
+                  </p>
+
                 </div>
-
-                {/* CHECKOUT */}
-                <Link
-                  to="/checkout"
-                  className="mt-7 w-full bg-[#C49A6C] text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#a98259] transition"
-                >
-                  <FiShoppingBag size={18} />
-                  Proceed to Checkout
-                </Link>
-
-                {/* SECURITY NOTE */}
-                <p className="text-center text-xs text-gray-400 mt-4">
-                  Secure checkout · Easy returns
-                </p>
 
               </div>
 
-            </div>
+            </aside>
 
           </div>
 

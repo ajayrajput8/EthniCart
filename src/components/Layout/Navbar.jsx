@@ -1,10 +1,16 @@
 import { useContext, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+
 import {
   FiShoppingBag,
   FiUser,
   FiLogOut,
   FiHeart,
+  FiMenu,
+  FiX,
+  FiPackage,
+  FiHome,
+  FiGrid,
 } from "react-icons/fi";
 
 import { CartContext } from "../../context/CartContext";
@@ -16,144 +22,384 @@ const Navbar = () => {
 
   const navigate = useNavigate();
 
-  const [showMenu, setShowMenu] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  // =====================================================
+  // CART COUNT
+  // =====================================================
 
   const totalItems = cart.reduce(
-    (total, item) => total + item.quantity,
+    (total, item) => total + Number(item.quantity || 0),
     0
   );
 
+  // =====================================================
+  // CLOSE MOBILE MENU
+  // =====================================================
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  // =====================================================
+  // LOGOUT
+  // =====================================================
+
   const handleLogout = () => {
     logout();
-    setShowMenu(false);
+    setIsMobileMenuOpen(false);
+    setIsUserMenuOpen(false);
     navigate("/login");
   };
 
+  // =====================================================
+  // DESKTOP NAV STYLE
+  // =====================================================
+
+  const desktopNavClass = ({ isActive }) =>
+    `flex items-center gap-2 font-medium transition ${
+      isActive
+        ? "text-[#C49A6C]"
+        : "text-gray-700 hover:text-[#C49A6C]"
+    }`;
+
+  // =====================================================
+  // MOBILE NAV STYLE
+  // =====================================================
+
+  const mobileNavClass = ({ isActive }) =>
+    `flex items-center justify-center gap-1.5 whitespace-nowrap px-3 py-2 rounded-lg text-[13px] font-semibold transition ${
+      isActive
+        ? "bg-[#C49A6C] text-white"
+        : "text-gray-600 hover:text-[#C49A6C]"
+    }`;
+
   return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+    <nav className="sticky top-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm">
 
-        {/* LOGO */}
-        <Link to="/">
-          <h1 className="text-3xl font-bold text-[#C49A6C]">
-            EthniCart
-          </h1>
-        </Link>
+      {/* =====================================================
+          TOP NAVBAR
+      ===================================================== */}
 
-        {/* MENU */}
-        <div className="hidden md:flex items-center gap-8">
+      <div className="max-w-7xl mx-auto">
+
+        <div className="h-[64px] sm:h-[72px] px-3 sm:px-6 flex items-center justify-between gap-2">
+
+          {/* =================================================
+              LOGO
+          ================================================= */}
 
           <Link
             to="/"
-            className="text-gray-700 hover:text-[#C49A6C] transition"
+            onClick={closeMobileMenu}
+            className="shrink-0"
           >
-            Home
+            <h1 className="text-[25px] sm:text-3xl font-bold tracking-tight text-[#C49A6C] whitespace-nowrap">
+              EthniCart
+            </h1>
           </Link>
 
-          <Link
-            to="/shop"
-            className="text-gray-700 hover:text-[#C49A6C] transition"
-          >
-            Shop
-          </Link>
+          {/* =================================================
+              DESKTOP MENU
+          ================================================= */}
 
-          <Link
-            to="/wishlist"
-            className="text-gray-700 hover:text-[#C49A6C] transition flex items-center gap-2"
-          >
-            <FiHeart size={18} />
-            Wishlist
-          </Link>
+          <div className="hidden lg:flex items-center gap-7">
 
-        </div>
+            <NavLink
+              to="/"
+              className={desktopNavClass}
+            >
+              <FiHome size={17} />
+              Home
+            </NavLink>
 
-        {/* RIGHT SIDE */}
-        <div className="flex items-center gap-4">
+            <NavLink
+              to="/shop"
+              className={desktopNavClass}
+            >
+              <FiGrid size={17} />
+              Shop
+            </NavLink>
 
-          {/* USER */}
-          {user ? (
-            <div className="relative">
+            <NavLink
+              to="/wishlist"
+              className={desktopNavClass}
+            >
+              <FiHeart size={17} />
+              Wishlist
+            </NavLink>
 
-              <button
-                type="button"
-                onClick={() => setShowMenu(!showMenu)}
-                className="flex items-center gap-2 border border-gray-200 px-4 py-2 rounded-xl hover:border-[#C49A6C] transition"
+            {user && (
+              <NavLink
+                to="/orders"
+                className={desktopNavClass}
               >
-                <FiUser size={18} />
+                <FiPackage size={17} />
+                Orders
+              </NavLink>
+            )}
 
-                <span className="hidden sm:block font-medium">
-                  {user.name}
-                </span>
-              </button>
+          </div>
 
-              {/* DROPDOWN */}
-              {showMenu && (
-                <div className="absolute right-0 top-14 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2">
+          {/* =================================================
+              RIGHT SIDE
+          ================================================= */}
 
-                  <Link
-                    to="/profile"
-                    onClick={() => setShowMenu(false)}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50"
-                  >
-                    <FiUser size={18} />
-                    Profile
-                  </Link>
+          <div className="flex items-center gap-2 shrink-0">
 
-                  <Link
-                    to="/wishlist"
-                    onClick={() => setShowMenu(false)}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50"
-                  >
-                    <FiHeart size={18} />
-                    Wishlist
-                  </Link>
+            {/* =================================================
+                DESKTOP USER
+            ================================================= */}
+
+            <div className="hidden lg:block relative">
+
+              {user ? (
+                <>
 
                   <button
                     type="button"
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50"
+                    onClick={() =>
+                      setIsUserMenuOpen(!isUserMenuOpen)
+                    }
+                    className="flex items-center gap-2 max-w-[170px] border border-gray-200 px-3 py-2 rounded-xl hover:border-[#C49A6C] transition"
                   >
-                    <FiLogOut size={18} />
-                    Logout
+                    <FiUser size={18} />
+
+                    <span className="truncate font-medium">
+                      {user.name || "Account"}
+                    </span>
                   </button>
 
-                </div>
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 top-14 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden">
+
+                      <Link
+                        to="/profile"
+                        onClick={() =>
+                          setIsUserMenuOpen(false)
+                        }
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50"
+                      >
+                        <FiUser size={18} />
+                        Profile
+                      </Link>
+
+                      <Link
+                        to="/orders"
+                        onClick={() =>
+                          setIsUserMenuOpen(false)
+                        }
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50"
+                      >
+                        <FiPackage size={18} />
+                        My Orders
+                      </Link>
+
+                      <Link
+                        to="/wishlist"
+                        onClick={() =>
+                          setIsUserMenuOpen(false)
+                        }
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50"
+                      >
+                        <FiHeart size={18} />
+                        Wishlist
+                      </Link>
+
+                      <div className="border-t border-gray-100 my-1" />
+
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50"
+                      >
+                        <FiLogOut size={18} />
+                        Logout
+                      </button>
+
+                    </div>
+                  )}
+
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  className="flex items-center gap-2 border border-[#C49A6C] text-[#C49A6C] px-4 py-2 rounded-xl font-semibold hover:bg-[#C49A6C] hover:text-white transition"
+                >
+                  <FiUser size={18} />
+                  Login
+                </Link>
               )}
 
             </div>
-          ) : (
-            /* LOGIN */
+
+            {/* =================================================
+                CART
+            ================================================= */}
+
             <Link
-              to="/login"
-              className="flex items-center gap-2 border border-[#C49A6C] text-[#C49A6C] px-4 py-2 rounded-xl font-semibold hover:bg-[#C49A6C] hover:text-white transition"
+              to="/cart"
+              className="relative w-10 h-10 sm:w-auto sm:px-4 rounded-xl bg-[#C49A6C] text-white flex items-center justify-center gap-2 hover:bg-[#a98259] transition shrink-0"
+              aria-label="Shopping Cart"
             >
-              <FiUser size={18} />
-              Login
-            </Link>
-          )}
+              <FiShoppingBag size={19} />
 
-          {/* CART */}
-          <Link
-            to="/cart"
-            className="relative flex items-center gap-2 bg-[#C49A6C] text-white px-4 py-2 rounded-xl hover:bg-[#a98259] transition"
-          >
-            <FiShoppingBag size={18} />
-
-            <span className="hidden sm:block">
-              Cart
-            </span>
-
-            {/* CART COUNT */}
-            {totalItems > 0 && (
-              <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                {totalItems}
+              <span className="hidden sm:inline font-semibold">
+                Cart
               </span>
-            )}
-          </Link>
+
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 min-w-[20px] h-[20px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+
+            {/* =================================================
+                MOBILE MENU BUTTON
+            ================================================= */}
+
+            <button
+              type="button"
+              onClick={() =>
+                setIsMobileMenuOpen(!isMobileMenuOpen)
+              }
+              className="lg:hidden w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-700 shrink-0"
+              aria-label="Menu"
+            >
+              {isMobileMenuOpen ? (
+                <FiX size={21} />
+              ) : (
+                <FiMenu size={21} />
+              )}
+            </button>
+
+          </div>
 
         </div>
 
+        {/* =====================================================
+            MOBILE DIRECT NAVIGATION
+        ===================================================== */}
+
+        <div className="lg:hidden border-t border-gray-100 px-2 py-2">
+
+          <div className="flex items-center justify-between gap-1 overflow-x-auto scrollbar-hide">
+
+            {/* HOME */}
+
+            <NavLink
+              to="/"
+              className={mobileNavClass}
+            >
+              <FiHome size={15} />
+              Home
+            </NavLink>
+
+            {/* SHOP */}
+
+            <NavLink
+              to="/shop"
+              className={mobileNavClass}
+            >
+              <FiGrid size={15} />
+              Shop
+            </NavLink>
+
+            {/* WISHLIST */}
+
+            <NavLink
+              to="/wishlist"
+              className={mobileNavClass}
+            >
+              <FiHeart size={15} />
+              Wishlist
+            </NavLink>
+
+            {/* ORDERS */}
+
+            {user && (
+              <NavLink
+                to="/orders"
+                className={mobileNavClass}
+              >
+                <FiPackage size={15} />
+                Orders
+              </NavLink>
+            )}
+
+          </div>
+
+        </div>
+
+        {/* =====================================================
+            MOBILE ACCOUNT MENU
+        ===================================================== */}
+
+        {isMobileMenuOpen && (
+          <div className="lg:hidden border-t border-gray-100 bg-white px-3 py-4">
+
+            {user ? (
+              <div className="space-y-1">
+
+                {/* ACCOUNT */}
+
+                <div className="bg-[#F8F5F0] rounded-xl px-4 py-3 mb-2">
+
+                  <p className="text-[10px] uppercase tracking-[2px] text-[#C49A6C] font-bold">
+                    Account
+                  </p>
+
+                  <p className="text-sm font-semibold text-gray-900 mt-1">
+                    {user.name || "User"}
+                  </p>
+
+                  <p className="text-xs text-gray-500 mt-1 truncate">
+                    {user.email || ""}
+                  </p>
+
+                </div>
+
+                {/* PROFILE */}
+
+                <Link
+                  to="/profile"
+                  onClick={closeMobileMenu}
+                  className="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50"
+                >
+                  <FiUser size={19} />
+                  Profile
+                </Link>
+
+                {/* LOGOUT */}
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50"
+                >
+                  <FiLogOut size={19} />
+                  Logout
+                </button>
+
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                onClick={closeMobileMenu}
+                className="flex items-center justify-center gap-2 bg-[#C49A6C] text-white px-4 py-3 rounded-xl font-semibold"
+              >
+                <FiUser size={18} />
+                Login
+              </Link>
+            )}
+
+          </div>
+        )}
+
       </div>
+
     </nav>
   );
 };

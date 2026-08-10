@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   FiArrowLeft,
   FiHeart,
@@ -7,6 +7,10 @@ import {
   FiPlus,
   FiShoppingBag,
   FiStar,
+  FiTruck,
+  FiShield,
+  FiRefreshCw,
+  FiCheck,
 } from "react-icons/fi";
 
 import products from "../data/products";
@@ -16,6 +20,7 @@ import { AuthContext } from "../context/AuthContext";
 
 const Product = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const { addToCart } = useContext(CartContext);
 
@@ -35,33 +40,35 @@ const Product = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">
+      <main className="min-h-screen bg-[#faf9f7] flex items-center justify-center px-5">
+        <div className="text-center bg-white rounded-3xl border border-gray-100 shadow-sm p-8 sm:p-12 max-w-md w-full">
+          <div className="w-16 h-16 mx-auto rounded-full bg-gray-100 flex items-center justify-center text-2xl">
+            📦
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mt-5">
             Product Not Found
           </h1>
 
-          <p className="text-gray-500 mt-3">
-            The product you're looking for doesn't exist.
+          <p className="text-gray-500 mt-3 leading-6">
+            The product you're looking for doesn't exist or may
+            have been removed.
           </p>
 
           <Link
             to="/shop"
-            className="inline-flex items-center gap-2 mt-6 bg-[#C49A6C] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#a98259] transition"
+            className="inline-flex items-center justify-center gap-2 mt-7 bg-gray-900 text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#C49A6C] transition"
           >
             <FiArrowLeft />
             Back to Shop
           </Link>
         </div>
-      </div>
+      </main>
     );
   }
 
   const liked = isInWishlist(product.id);
 
-  // =========================
-  // QUANTITY
-  // =========================
   const increaseQuantity = () => {
     setQuantity((current) => current + 1);
   };
@@ -72,11 +79,13 @@ const Product = () => {
     );
   };
 
-  // =========================
-  // ADD TO CART
-  // =========================
   const handleAddToCart = () => {
     if (!user) {
+      navigate("/login", {
+        state: {
+          from: `/product/${product.id}`,
+        },
+      });
       return;
     }
 
@@ -85,11 +94,13 @@ const Product = () => {
     }
   };
 
-  // =========================
-  // WISHLIST
-  // =========================
   const handleWishlist = () => {
     if (!user) {
+      navigate("/login", {
+        state: {
+          from: `/product/${product.id}`,
+        },
+      });
       return;
     }
 
@@ -100,9 +111,23 @@ const Product = () => {
     }
   };
 
-  // =========================
-  // RELATED PRODUCTS
-  // =========================
+  const handleBuyNow = () => {
+    if (!user) {
+      navigate("/login", {
+        state: {
+          from: `/product/${product.id}`,
+        },
+      });
+      return;
+    }
+
+    for (let i = 0; i < quantity; i++) {
+      addToCart(product);
+    }
+
+    navigate("/cart");
+  };
+
   const relatedProducts = products
     .filter(
       (item) =>
@@ -111,155 +136,266 @@ const Product = () => {
     )
     .slice(0, 4);
 
-  return (
-    <main className="bg-[#faf9f7] min-h-screen">
+  const totalPrice =
+    Number(product.price || 0) * quantity;
 
-      {/* =========================
-          BREADCRUMB
-      ========================= */}
-      <section className="max-w-7xl mx-auto px-6 pt-8">
+  return (
+    <main className="min-h-screen bg-[#faf9f7] text-gray-900">
+
+      {/* ================= BREADCRUMB ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-7">
+
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <Link
+            to="/"
+            className="hover:text-[#C49A6C] transition"
+          >
+            Home
+          </Link>
+
+          <span>/</span>
+
+          <Link
+            to="/shop"
+            className="hover:text-[#C49A6C] transition"
+          >
+            Shop
+          </Link>
+
+          <span>/</span>
+
+          <span className="text-gray-700 font-medium truncate max-w-[180px] sm:max-w-none">
+            {product.name}
+          </span>
+        </div>
+
         <Link
           to="/shop"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-[#C49A6C] transition font-medium"
+          className="inline-flex items-center gap-2 mt-5 text-sm font-semibold text-gray-600 hover:text-[#C49A6C] transition"
         >
-          <FiArrowLeft />
+          <FiArrowLeft size={16} />
           Back to Shop
         </Link>
+
       </section>
 
-      {/* =========================
-          PRODUCT
-      ========================= */}
-      <section className="max-w-7xl mx-auto px-6 py-10">
+      {/* ================= PRODUCT ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7 sm:py-10 lg:py-12">
 
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 xl:gap-20 items-start">
 
-          {/* IMAGE */}
-          <div className="relative bg-white rounded-3xl overflow-hidden shadow-sm">
+          {/* ================= IMAGE ================= */}
+          <div className="lg:sticky lg:top-24">
 
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-[500px] md:h-[600px] object-cover"
-            />
+            <div className="relative bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-gray-100 shadow-sm">
 
-            {product.badge && (
-              <span className="absolute top-6 left-6 bg-[#C49A6C] text-white text-sm font-semibold px-4 py-2 rounded-full">
-                {product.badge}
-              </span>
-            )}
+              <div className="aspect-[4/5] sm:aspect-[4/5] lg:aspect-[4/5]">
 
-            {/* WISHLIST */}
-            <button
-              type="button"
-              onClick={handleWishlist}
-              className={`absolute top-6 right-6 w-12 h-12 rounded-full flex items-center justify-center shadow-md transition ${
-                liked
-                  ? "bg-[#C49A6C] text-white"
-                  : "bg-white text-gray-700 hover:bg-[#C49A6C] hover:text-white"
-              }`}
-            >
-              <FiHeart
-                size={22}
-                className={liked ? "fill-current" : ""}
-              />
-            </button>
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+
+              </div>
+
+              {/* BADGE */}
+              {product.badge && (
+                <span className="absolute top-4 left-4 sm:top-6 sm:left-6 bg-[#C49A6C] text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-full shadow-md">
+                  {product.badge}
+                </span>
+              )}
+
+              {/* WISHLIST */}
+              <button
+                type="button"
+                onClick={handleWishlist}
+                aria-label={
+                  liked
+                    ? "Remove from wishlist"
+                    : "Add to wishlist"
+                }
+                className={`absolute top-4 right-4 sm:top-6 sm:right-6 w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ${
+                  liked
+                    ? "bg-[#C49A6C] text-white"
+                    : "bg-white/95 text-gray-700 hover:bg-[#C49A6C] hover:text-white"
+                }`}
+              >
+                <FiHeart
+                  size={21}
+                  className={liked ? "fill-current" : ""}
+                />
+              </button>
+
+            </div>
+
+            {/* TRUST STRIP */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-3 sm:mt-4">
+
+              <div className="bg-white border border-gray-100 rounded-xl p-3 text-center">
+                <FiTruck
+                  className="mx-auto text-[#C49A6C]"
+                  size={18}
+                />
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-700 mt-2">
+                  Fast Delivery
+                </p>
+              </div>
+
+              <div className="bg-white border border-gray-100 rounded-xl p-3 text-center">
+                <FiShield
+                  className="mx-auto text-[#C49A6C]"
+                  size={18}
+                />
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-700 mt-2">
+                  Secure Payment
+                </p>
+              </div>
+
+              <div className="bg-white border border-gray-100 rounded-xl p-3 text-center">
+                <FiRefreshCw
+                  className="mx-auto text-[#C49A6C]"
+                  size={18}
+                />
+                <p className="text-[10px] sm:text-xs font-semibold text-gray-700 mt-2">
+                  Easy Returns
+                </p>
+              </div>
+
+            </div>
 
           </div>
 
-          {/* DETAILS */}
-          <div className="pt-2">
+          {/* ================= DETAILS ================= */}
+          <div className="pt-1 lg:pt-4">
 
             {/* CATEGORY */}
-            <p className="text-[#C49A6C] uppercase tracking-[3px] text-sm font-semibold">
+            <p className="text-[#C49A6C] uppercase tracking-[3px] text-xs sm:text-sm font-bold">
               {product.category}
             </p>
 
             {/* NAME */}
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mt-4 leading-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mt-3 leading-[1.08] tracking-tight">
               {product.name}
             </h1>
 
             {/* RATING */}
-            <div className="flex items-center gap-2 mt-5">
+            <div className="flex flex-wrap items-center gap-2 mt-5">
 
               <div className="flex items-center gap-1 text-[#C49A6C]">
-                <FiStar
-                  size={18}
-                  className="fill-current"
-                />
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <FiStar
+                    key={star}
+                    size={16}
+                    className="fill-current"
+                  />
+                ))}
               </div>
 
-              <span className="font-semibold text-gray-800">
+              <span className="font-semibold text-gray-800 text-sm">
                 {product.rating || "4.5"}
               </span>
 
-              <span className="text-gray-400">
-                ·
+              <span className="text-gray-300">
+                |
               </span>
 
-              <span className="text-gray-500">
-                Customer rating
+              <span className="text-sm text-gray-500">
+                Highly rated
               </span>
 
             </div>
 
             {/* PRICE */}
-            <div className="flex items-center gap-4 mt-7">
+            <div className="flex flex-wrap items-center gap-3 mt-6">
 
-              <span className="text-3xl font-bold text-gray-900">
+              <span className="text-3xl sm:text-4xl font-bold text-gray-900">
                 ₹{Number(product.price).toLocaleString("en-IN")}
               </span>
 
               {product.oldPrice && (
-                <span className="text-lg text-gray-400 line-through">
+                <span className="text-base sm:text-lg text-gray-400 line-through">
                   ₹{Number(product.oldPrice).toLocaleString("en-IN")}
+                </span>
+              )}
+
+              {product.oldPrice && (
+                <span className="bg-green-50 text-green-700 text-xs font-bold px-2.5 py-1.5 rounded-lg">
+                  SPECIAL PRICE
                 </span>
               )}
 
             </div>
 
-            {/* DESCRIPTION */}
-            <div className="border-t border-gray-200 mt-8 pt-8">
+            {/* DIVIDER */}
+            <div className="border-t border-gray-200 mt-7 pt-7">
 
-              <h2 className="text-lg font-semibold text-gray-900">
-                Product Description
+              <h2 className="font-bold text-gray-900">
+                About this product
               </h2>
 
-              <p className="text-gray-500 leading-7 mt-3">
+              <p className="text-gray-500 leading-7 mt-3 text-sm sm:text-base">
                 {product.description ||
                   "Discover premium quality and timeless style with this EthniCart product. Designed with attention to detail and made for comfortable everyday wear."}
               </p>
 
             </div>
 
+            {/* AVAILABILITY */}
+            <div className="flex items-center gap-2 mt-6">
+
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+
+              <span className="text-sm font-semibold text-green-700">
+                In Stock
+              </span>
+
+              <span className="text-sm text-gray-400">
+                • Ready to ship
+              </span>
+
+            </div>
+
             {/* QUANTITY */}
-            <div className="mt-8">
+            <div className="mt-7">
 
-              <p className="text-sm font-semibold text-gray-700 mb-3">
-                Quantity
-              </p>
+              <div className="flex items-center justify-between mb-3">
 
-              <div className="flex items-center border border-gray-200 bg-white rounded-xl w-fit overflow-hidden">
+                <p className="text-sm font-semibold text-gray-700">
+                  Quantity
+                </p>
+
+                <p className="text-sm text-gray-400">
+                  Total:{" "}
+                  <span className="font-semibold text-gray-700">
+                    ₹{totalPrice.toLocaleString("en-IN")}
+                  </span>
+                </p>
+
+              </div>
+
+              <div className="flex items-center w-fit bg-white border border-gray-200 rounded-xl overflow-hidden">
 
                 <button
                   type="button"
                   onClick={decreaseQuantity}
-                  className="w-12 h-12 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition"
+                  aria-label="Decrease quantity"
+                  className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition"
                 >
-                  <FiMinus />
+                  <FiMinus size={17} />
                 </button>
 
-                <span className="w-12 text-center font-semibold">
+                <span className="w-12 sm:w-14 text-center font-bold text-gray-900">
                   {quantity}
                 </span>
 
                 <button
                   type="button"
                   onClick={increaseQuantity}
-                  className="w-12 h-12 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition"
+                  aria-label="Increase quantity"
+                  className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition"
                 >
-                  <FiPlus />
+                  <FiPlus size={17} />
                 </button>
 
               </div>
@@ -267,12 +403,12 @@ const Product = () => {
             </div>
 
             {/* ACTIONS */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-8">
+            <div className="grid grid-cols-[1fr_auto] gap-3 mt-7">
 
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="flex-1 bg-[#C49A6C] text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#a98259] transition"
+                className="bg-gray-900 text-white min-h-13 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#C49A6C] transition-all duration-300 shadow-sm"
               >
                 <FiShoppingBag size={19} />
                 Add to Cart
@@ -281,7 +417,12 @@ const Product = () => {
               <button
                 type="button"
                 onClick={handleWishlist}
-                className={`sm:w-14 h-14 rounded-xl border flex items-center justify-center transition ${
+                aria-label={
+                  liked
+                    ? "Remove from wishlist"
+                    : "Add to wishlist"
+                }
+                className={`w-13 min-h-13 rounded-xl border flex items-center justify-center transition ${
                   liked
                     ? "bg-[#C49A6C] border-[#C49A6C] text-white"
                     : "bg-white border-gray-200 text-gray-700 hover:border-[#C49A6C] hover:text-[#C49A6C]"
@@ -295,27 +436,47 @@ const Product = () => {
 
             </div>
 
-            {/* INFO */}
-            <div className="grid grid-cols-2 gap-4 mt-8">
+            {/* BUY NOW */}
+            <button
+              type="button"
+              onClick={handleBuyNow}
+              className="w-full mt-3 min-h-13 rounded-xl bg-[#C49A6C] hover:bg-[#a98259] text-white font-semibold transition-all duration-300"
+            >
+              Buy Now
+            </button>
 
-              <div className="bg-white rounded-2xl p-5">
-                <p className="text-sm text-gray-400">
+            {/* PRODUCT INFO */}
+            <div className="grid grid-cols-2 gap-3 mt-7">
+
+              <div className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-5">
+
+                <p className="text-xs text-gray-400 uppercase tracking-wide">
                   Category
                 </p>
 
                 <p className="font-semibold text-gray-900 mt-1">
                   {product.category}
                 </p>
+
               </div>
 
-              <div className="bg-white rounded-2xl p-5">
-                <p className="text-sm text-gray-400">
+              <div className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-5">
+
+                <p className="text-xs text-gray-400 uppercase tracking-wide">
                   Availability
                 </p>
 
-                <p className="font-semibold text-green-600 mt-1">
-                  In Stock
-                </p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <FiCheck
+                    size={15}
+                    className="text-green-600"
+                  />
+
+                  <p className="font-semibold text-green-600">
+                    In Stock
+                  </p>
+                </div>
+
               </div>
 
             </div>
@@ -326,53 +487,65 @@ const Product = () => {
 
       </section>
 
-      {/* =========================
-          RELATED PRODUCTS
-      ========================= */}
+      {/* ================= RELATED PRODUCTS ================= */}
       {relatedProducts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 pb-16">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20">
 
-          <div className="border-t border-gray-200 pt-12">
+          <div className="border-t border-gray-200 pt-10 sm:pt-14">
 
-            <p className="text-[#C49A6C] uppercase tracking-[3px] text-sm font-semibold">
-              You may also like
-            </p>
+            <div className="flex items-end justify-between gap-4">
 
-            <h2 className="text-3xl font-bold text-gray-900 mt-2">
-              Related Products
-            </h2>
+              <div>
+                <p className="text-[#C49A6C] uppercase tracking-[3px] text-xs sm:text-sm font-bold">
+                  You may also like
+                </p>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mt-2">
+                  Related Products
+                </h2>
+              </div>
+
+              <Link
+                to="/shop"
+                className="hidden sm:block text-sm font-semibold text-gray-700 hover:text-[#C49A6C] transition"
+              >
+                View All →
+              </Link>
+
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6 mt-7 sm:mt-9">
 
               {relatedProducts.map((item) => (
 
                 <Link
                   key={item.id}
                   to={`/product/${item.id}`}
-                  className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group"
+                  className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300"
                 >
 
-                  <div className="h-64 overflow-hidden bg-gray-100">
+                  <div className="aspect-[4/5] overflow-hidden bg-gray-100">
 
                     <img
                       src={item.image}
                       alt={item.name}
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
 
                   </div>
 
-                  <div className="p-5">
+                  <div className="p-3 sm:p-5">
 
-                    <p className="text-sm text-gray-400">
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-400">
                       {item.category}
                     </p>
 
-                    <h3 className="font-semibold text-gray-900 mt-1 group-hover:text-[#C49A6C] transition">
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base mt-1 line-clamp-1 group-hover:text-[#C49A6C] transition">
                       {item.name}
                     </h3>
 
-                    <p className="text-lg font-bold text-gray-900 mt-3">
+                    <p className="text-base sm:text-lg font-bold text-gray-900 mt-2">
                       ₹{Number(item.price).toLocaleString("en-IN")}
                     </p>
 
@@ -383,6 +556,13 @@ const Product = () => {
               ))}
 
             </div>
+
+            <Link
+              to="/shop"
+              className="sm:hidden flex items-center justify-center mt-6 w-full py-3 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-800"
+            >
+              View All Products
+            </Link>
 
           </div>
 
