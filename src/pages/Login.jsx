@@ -11,6 +11,7 @@ const Login = () => {
   const location = useLocation();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     phone: "",
@@ -28,23 +29,33 @@ const Login = () => {
     setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    const result = login(
-      form.phone,
-      form.password
-    );
+    try {
+      setLoading(true);
 
-    if (!result.success) {
-      setError(result.message);
-      return;
+      const result = await login(
+        form.phone,
+        form.password
+      );
+
+      if (!result.success) {
+        setError(result.message);
+        return;
+      }
+
+      // Redirect to previous page or shop
+      const from = location.state?.from || "/shop";
+
+      navigate(from, { replace: true });
+    } catch (error) {
+      console.error("Login error:", error);
+      setError("Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    // Where user wanted to go before login
-    const from = location.state?.from || "/shop";
-
-    navigate(from, { replace: true });
   };
 
   return (

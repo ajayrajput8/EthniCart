@@ -1,6 +1,9 @@
 import { createContext, useState } from "react";
 export const AuthContext = createContext();
 
+const API_URL = "http://localhost:8000/api";
+
+
 const AuthProvider = ({ children }) => {
   // =========================
   // CURRENT LOGGED IN USER
@@ -14,175 +17,186 @@ const AuthProvider = ({ children }) => {
   // =========================
   // REGISTER
   // =========================
-  const register = (
+  const register = async (
     name,
     phone,
     location,
     email,
     password
   ) => {
-    const savedUsers =
-      localStorage.getItem("ethnicartUsers");
+    try {
+      const response = await fetch(`${API_URL}/users/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          phone,
+          location,
+          email,
+          password,
+        }),
+      });
 
-    const users = savedUsers
-      ? JSON.parse(savedUsers)
-      : [];
+      const data = await response.json();
 
-    // Check duplicate email
-    const existingUser = users.find(
-      (item) =>
-        item.email?.toLowerCase() ===
-        email.toLowerCase()
-    );
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || "Registration failed.",
+        };
+      }
 
-    if (existingUser) {
+      // Save JWT
+      localStorage.setItem("token", data.token);
+
+      // Save logged-in user
+      localStorage.setItem(
+        "ethnicartUser",
+        JSON.stringify(data.user)
+      );
+
+      setUser(data.user);
+
+      return {
+        success: true,
+        user: data.user,
+        token: data.token,
+      };
+    } catch (error) {
+      console.error("Register error:", error);
+
       return {
         success: false,
-        message:
-          "An account with this email already exists. Please login.",
+        message: "Unable to connect to server.",
       };
     }
-
-    // Create new user
-    const newUser = {
-      id: Date.now(),
-      name,
-      phone,
-      location,
-      email,
-      password,
-      orders: 0,
-      spent: 0,
-      joined: new Date().toLocaleDateString(),
-    };
-
-    // Save user in all users
-    const updatedUsers = [
-      ...users,
-      newUser,
-    ];
-
-    localStorage.setItem(
-      "ethnicartUsers",
-      JSON.stringify(updatedUsers)
-    );
-
-    // Save currently logged-in user
-    localStorage.setItem(
-      "ethnicartUser",
-      JSON.stringify(newUser)
-    );
-
-    setUser(newUser);
-
-    return {
-      success: true,
-    };
   };
 
   // =========================
   // LOGIN
   // =========================
-  const login = (email, password) => {
-    const savedUsers =
-      localStorage.getItem("ethnicartUsers");
+  const login = async (phone, password) => {
+      try {
+        const response = await fetch(`${API_URL}/users/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone,
+            password,
+          }),
+        });
 
-    const users = savedUsers
-      ? JSON.parse(savedUsers)
-      : [];
+        const data = await response.json();
 
-    const storedUser = users.find(
-      (item) =>
-        item.email?.toLowerCase() ===
-          email.toLowerCase() &&
-        item.password === password
-    );
+        if (!response.ok) {
+          return {
+            success: false,
+            message: data.message || "Invalid phone or password.",
+          };
+        }
 
-    if (!storedUser) {
-      return {
-        success: false,
-        message: "Invalid email or password.",
-      };
-    }
+        // Save JWT
+        localStorage.setItem("token", data.token);
 
-    // Save current user
-    localStorage.setItem(
-      "ethnicartUser",
-      JSON.stringify(storedUser)
-    );
+        // Save user
+        localStorage.setItem(
+          "ethnicartUser",
+          JSON.stringify(data.user)
+        );
 
-    setUser(storedUser);
+        setUser(data.user);
 
-    return {
-      success: true,
-    };
-  };
+        return {
+          success: true,
+          user: data.user,
+          token: data.token,
+        };
+      } catch (error) {
+        console.error("Login error:", error);
 
-  // =========================
-  // LOGOUT
-  // =========================
-  const logout = () => {
-    localStorage.removeItem("ethnicartUser");
-
-    setUser(null);
-  };
-
-  // =========================
-  // UPDATE USER
-  // =========================
-  const updateUser = (updatedData) => {
-    if (!user) return;
-
-    const updatedUser = {
-      ...user,
-      ...updatedData,
+        return {
+          success: false,
+          message: "Unable to connect to server.",
+        };
+      }
     };
 
-    // Update current user
-    setUser(updatedUser);
+    // =========================
+    // LOGOUT
+    // =========================
+    const logout = () => {
+      localStorage.removeItem("token");
+      localStorage.removeItem("ethnicartUser");
 
-    localStorage.setItem(
-      "ethnicartUser",
-      JSON.stringify(updatedUser)
-    );
+      setUser(null);
+    };
 
-    // Update users list
-    const savedUsers =
-      localStorage.getItem("ethnicartUsers");
+    // =========================
+    // UPDATE USER
+    // =========================
+    const updateUser = async (updatedData) => {
+      try {
+        const token = localStorage.getItem("token");
 
-    const users = savedUsers
-      ? JSON.parse(savedUsers)
-      : [];
+        const response = await fetch(`${API_URL}/users/edit`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatedData),
+        });
 
-    const updatedUsers = users.map(
-      (item) =>
-        item.id === user.id
-          ? updatedUser
-          : item
-    );
+        const data = await response.json();
 
-    localStorage.setItem(
-      "ethnicartUsers",
-      JSON.stringify(updatedUsers)
+        if (!response.ok) {
+          return {
+            success: false,
+            message: data.message || "Failed to update user.",
+          };
+        }
+
+        localStorage.setItem(
+          "ethnicartUser",
+          JSON.stringify(data.user)
+        );
+
+        setUser(data.user);
+
+        return {
+          success: true,
+          user: data.user,
+        };
+      } catch (error) {
+        console.error("Update user error:", error);
+
+        return {
+          success: false,
+          message: "Unable to connect to server.",
+        };
+      }
+    };
+
+    // =========================
+    // PROVIDER
+    // =========================
+    return (
+      <AuthContext.Provider
+        value={{
+          user,
+          register,
+          login,
+          logout,
+          updateUser,
+        }}
+      >
+        {children}
+      </AuthContext.Provider>
     );
   };
 
-  // =========================
-  // PROVIDER
-  // =========================
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        register,
-        login,
-        logout,
-        updateUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export default AuthProvider;
+  export default AuthProvider;
