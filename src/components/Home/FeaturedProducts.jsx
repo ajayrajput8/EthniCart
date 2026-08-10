@@ -1,10 +1,35 @@
 import { Link } from "react-router-dom";
 import { FiArrowUpRight } from "react-icons/fi";
-
+import { useEffect, useState } from "react";
 import ProductCard from "../Product/ProductCard";
-import products from "../../data/products";
+
+const API_URL = "http://localhost:8000/api";
 
 const FeaturedProducts = () => {
+  const [products, setProducts] = useState([]); 
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(`${API_URL}/products`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch products");
+        }
+
+        setProducts(data.products || []);
+      } catch (error) {
+        console.error("Featured products error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   return (
     <section>
 

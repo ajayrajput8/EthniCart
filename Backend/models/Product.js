@@ -35,6 +35,18 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
+    badge: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    
     cloudinaryPublicId: {
       type: String,
       default: null,

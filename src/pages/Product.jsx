@@ -1,5 +1,6 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+
 import {
   FiArrowLeft,
   FiHeart,
@@ -13,10 +14,12 @@ import {
   FiCheck,
 } from "react-icons/fi";
 
-import products from "../data/products";
+//import products from "../data/products";
 import { CartContext } from "../context/CartContext";
 import { WishlistContext } from "../context/WishlistContext";
 import { AuthContext } from "../context/AuthContext";
+
+const API_URL = "http://localhost:8000/api";
 
 const Product = () => {
   const { id } = useParams();
@@ -33,12 +36,71 @@ const Product = () => {
   const { user } = useContext(AuthContext);
 
   const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const product = products.find(
-    (item) => item.id === Number(id)
-  );
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-  if (!product) {
+        const response = await fetch(
+          `${API_URL}/products/${id}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Product not found");
+        }
+
+        setProduct(data.product);
+
+        const productsResponse = await fetch(
+          `${API_URL}/products`
+        );
+
+        const productsData = await productsResponse.json();
+
+        if (productsResponse.ok) {
+          const related = productsData.products
+            .filter(
+              (item) =>
+                item.category === data.product.category &&
+                String(item.id) !== String(data.product.id)
+            )
+            .slice(0, 4);
+
+          setRelatedProducts(related);
+        }
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#faf9f7] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-gray-200 border-t-[#C49A6C] rounded-full animate-spin mx-auto" />
+          <p className="text-gray-500 mt-4">
+            Loading product...
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error || !product) {
     return (
       <main className="min-h-screen bg-[#faf9f7] flex items-center justify-center px-5">
         <div className="text-center bg-white rounded-3xl border border-gray-100 shadow-sm p-8 sm:p-12 max-w-md w-full">
@@ -128,13 +190,13 @@ const Product = () => {
     navigate("/cart");
   };
 
-  const relatedProducts = products
+  /*const relatedProducts = products
     .filter(
       (item) =>
         item.category === product.category &&
         item.id !== product.id
     )
-    .slice(0, 4);
+    .slice(0, 4);*/
 
   const totalPrice =
     Number(product.price || 0) * quantity;

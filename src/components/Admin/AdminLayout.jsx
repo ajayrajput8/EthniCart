@@ -9,7 +9,9 @@ const INITIAL_CUSTOMERS = [];
 
 export default function AdminLayout() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(
+    () => sessionStorage.getItem("adminActiveTab") || "dashboard"
+  );
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
   const [salesView, setSalesView] = useState("weekly");
 
@@ -55,7 +57,6 @@ export default function AdminLayout() {
           }
         );
 
-        console.log("Fetch customers response:", response);
         const data = await response.json();
 
         if (!response.ok) {
@@ -95,6 +96,7 @@ export default function AdminLayout() {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+    sessionStorage.setItem("adminActiveTab", tab);
     setIsMobileMenuOpen(false);
   };
 
@@ -134,8 +136,8 @@ export default function AdminLayout() {
         prev.filter((product) => product._id !== id)
       );
 
-      console.log(data.message);
-
+      sessionStorage.setItem("adminActiveTab", activeTab);
+      window.location.reload();
     } catch (error) {
       console.error("Delete product error:", error);
       alert(error.message);
@@ -198,6 +200,8 @@ export default function AdminLayout() {
       formData.append("oldPrice", newProd.oldPrice || "");
       formData.append("rating", newProd.rating || "0");
       formData.append("category", newProd.category || "");
+      formData.append("badge", newProd.badge || "");
+      formData.append("description", newProd.description || "");
 
       formData.append("image", newProdFile);
 
@@ -212,8 +216,6 @@ export default function AdminLayout() {
         throw new Error(data.message || "Failed to add product");
       }
 
-      console.log("Product created:", data.product);
-
       setProducts((prev) => [data.product, ...prev]);
 
       setNewProd({
@@ -222,12 +224,15 @@ export default function AdminLayout() {
         oldPrice: "",
         rating: "",
         category: "",
+        badge: "",
+        description: "",
       });
 
       setNewProdFile(null);
       setNewProdPreview("");
 
       setShowAddModal(false);
+      window.location.reload();
 
     } catch (error) {
       console.error("Add product error:", error);
@@ -285,13 +290,23 @@ export default function AdminLayout() {
           ? editingProd.rating
           : "0"
       );
+      
+      formData.append(
+        "badge",
+        editingProd.badge || ""
+      );
+
+      formData.append(
+        "description",
+        editingProd.description || ""
+      );
 
       if (editProdFile) {
         formData.append("image", editProdFile);
       }
 
       const response = await fetch(
-        `${"http://localhost:8000/api/products"}/${editingProd._id}`,
+        `${"http://localhost:8000/api/products"}/${editingProd.id}`,
         {
           method: "PUT",
           body: formData,
@@ -306,11 +321,9 @@ export default function AdminLayout() {
         );
       }
 
-      console.log("Updated product:", data.product);
-
       setProducts((prev) =>
         prev.map((product) =>
-          product._id === data.product._id
+          product.id === data.product.id
             ? data.product
             : product
         )
@@ -320,6 +333,7 @@ export default function AdminLayout() {
       setEditingProd(null);
       setEditProdFile(null);
       setEditProdPreview("");
+      window.location.reload();
 
     } catch (error) {
       console.error("Update product error:", error);
@@ -520,7 +534,7 @@ export default function AdminLayout() {
                             Edit
                           </button>
                           <button
-                            onClick={() => handleDeleteProduct(p._id)}
+                            onClick={() => handleDeleteProduct(p.id)}
                             className="bg-red-50 hover:bg-red-100 text-red-600 font-medium text-xs px-3 py-1.5 rounded-md transition-colors"
                           >
                             Delete
@@ -570,11 +584,35 @@ export default function AdminLayout() {
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">Old Price (₹)</label>
                       <input
-                        type="Number"
+                        type="number"
                         step="0.01"
                         placeholder="Old Price"
                         value={newProd.oldPrice}
                         onChange={(e) => setNewProd({ ...newProd, oldPrice: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Badge</label>
+                      <input
+                        type="text"
+                        placeholder="Any Speciality"
+                        value={newProd.badge}
+                        onChange={(e) => setNewProd({ ...newProd, badge: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+                      <input
+                        type="text"
+                        placeholder="Any Speciality"
+                        value={newProd.description}
+                        onChange={(e) => setNewProd({ ...newProd, description: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         required
                       />
@@ -689,6 +727,26 @@ export default function AdminLayout() {
                         type="text"
                         value={editingProd.category}
                         onChange={(e) => setEditingProd({ ...editingProd, category: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Badge</label>
+                      <input
+                        type="text"
+                        value={editingProd.badge}
+                        onChange={(e) => setEditingProd({ ...editingProd, badge: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+                      <input
+                        type="text"
+                        value={editingProd.description}
+                        onChange={(e) => setEditingProd({ ...editingProd, description: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       />
                     </div>
