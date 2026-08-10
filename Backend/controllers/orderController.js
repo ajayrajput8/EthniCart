@@ -1,91 +1,78 @@
 const Order = require("../models/Order");
-const Product = require("../models/Product");
 
-// ADD ORDER
-const addOrder = async (req, res) => {
+const createOrder = async (req, res) => {
   try {
     const {
-      products,
-      location,
+      userId,
+      customer,
+      items,
+      total,
+      payment,
     } = req.body;
 
-    if (!products || products.length === 0) {
+    if (
+      !userId ||
+      !customer ||
+      !items?.length ||
+      total === undefined
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Products are required",
-      });
-    }
-
-    if (!location) {
-      return res.status(400).json({
-        success: false,
-        message: "Location is required",
-      });
-    }
-
-    let totalPrice = 0;
-
-    const orderProducts = [];
-
-    for (const item of products) {
-
-      const product = await Product.findById(
-        item.product
-      );
-
-      if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: `Product ${item.product} not found`,
-        });
-      }
-
-      const quantity = item.quantity || 1;
-
-      totalPrice += product.price * quantity;
-
-      orderProducts.push({
-        product: product._id,
-        quantity,
+        message: "Missing required order details",
       });
     }
 
     const order = await Order.create({
-      price: totalPrice,
-      user: req.user._id,
-      products: orderProducts,
-      location,
+      orderId: `EC${Date.now()}`,
+      userId,
+      customer,
+      items,
+      total,
+      payment: payment || "cod",
+      status: "Pending",
     });
-
-    const populatedOrder = await Order.findById(
-      order._id
-    )
-      .populate("user", "-password")
-      .populate("products.product");
 
     res.status(201).json({
       success: true,
       message: "Order placed successfully",
-      order: populatedOrder,
+      order,
     });
-
   } catch (error) {
-    console.error(error);
+    console.error("Create order error:", error);
 
     res.status(500).json({
       success: false,
-      message: "Failed to place order",
+      message: "Failed to create order",
     });
   }
 };
 
-
-// CANCEL ORDER
-const cancelOrder = async (req, res) => {
+const getUserOrders = async (req, res) => {
   try {
-    const order = await Order.findById(
-      req.params.id
-    );
+    const { userId } = req.params;
+
+    const orders = await Order.find({ userId })
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    console.error("Get orders error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch orders",
+    });
+  }
+};
+
+const getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findOne({
+      orderId: req.params.id,
+    });
 
     if (!order) {
       return res.status(404).json({
@@ -94,32 +81,46 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // Make sure user owns this order
+    res.json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    console.error("Get order error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch order",
+    });
+  }
+};
+
+const cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findOne({
+      orderId: req.params.id,
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
     if (
-      order.user.toString() !==
-      req.user._id.toString()
+      ["Shipped", "Delivered", "Cancelled"].includes(
+        order.status
+      )
     ) {
-      return res.status(403).json({
-        success: false,
-        message: "You cannot cancel this order",
-      });
-    }
-
-    if (order.status === "delivered") {
       return res.status(400).json({
         success: false,
-        message: "Delivered order cannot be cancelled",
+        message: `Order cannot be cancelled when status is ${order.status}`,
       });
     }
 
-    if (order.status === "cancelled") {
-      return res.status(400).json({
-        success: false,
-        message: "Order is already cancelled",
-      });
-    }
-
-    order.status = "cancelled";
+    order.status = "Cancelled";
+    order.cancelledAt = new Date();
 
     await order.save();
 
@@ -128,9 +129,8 @@ const cancelOrder = async (req, res) => {
       message: "Order cancelled successfully",
       order,
     });
-
   } catch (error) {
-    console.error(error);
+    console.error("Cancel order error:", error);
 
     res.status(500).json({
       success: false,
@@ -139,38 +139,86 @@ const cancelOrder = async (req, res) => {
   }
 };
 
-
-// GET ORDERS
-const getOrders = async (req, res) => {
+const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find({
-      user: req.user._id,
-    })
-      .populate("customer", "-password")
-      .populate("products.product")
-      .sort({
-        date: -1,
-      });
+    const orders = await Order.find()
+      .sort({ createdAt: -1 });
 
-    res.json({
+    res.status(200).json({
       success: true,
       count: orders.length,
       orders,
     });
-
   } catch (error) {
-    console.error(error);
+    console.error("Get all orders error:", error);
 
     res.status(500).json({
       success: false,
-      message: "Failed to get orders",
+      message: "Failed to fetch all orders",
     });
   }
 };
 
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const allowedStatuses = [
+      "Pending",
+      "Confirmed",
+      "Processing",
+      "Shipped",
+      "Delivered",
+      "Cancelled",
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order status",
+      });
+    }
+
+    const order = await Order.findOne({
+      orderId: id,
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    order.status = status;
+
+    if (status !== "Cancelled") {
+      order.cancelledAt = null;
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Order status updated",
+      order,
+    });
+  } catch (error) {
+    console.error("Update order status error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to update order status",
+    });
+  }
+};
 
 module.exports = {
-  addOrder,
+  createOrder,
+  getUserOrders,
+  getOrderById,
   cancelOrder,
-  getOrders,
+  getAllOrders,
+  updateOrderStatus,
 };

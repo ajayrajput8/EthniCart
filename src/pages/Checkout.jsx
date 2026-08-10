@@ -20,11 +20,12 @@ import {
 import { CartContext } from "../context/CartContext";
 import { AuthContext } from "../context/AuthContext";
 
+const API_URL = "http://localhost:8000/api";
+
 const Checkout = () => {
   const {
     cart,
     clearCart,
-    saveOrder,
   } = useContext(CartContext);
 
   const {
@@ -105,7 +106,7 @@ const Checkout = () => {
   // PLACE ORDER
   // =========================
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (isSubmitting) return;
@@ -122,81 +123,79 @@ const Checkout = () => {
 
     setIsSubmitting(true);
 
-    // =========================
-    // CREATE ORDER
-    // =========================
+    try {
+      const orderData = {
+        userId: user.id,
 
-    const order = {
-      id: "EC" + Date.now(),
+        customer: {
+          id: user.id,
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          address: form.address,
+          city: form.city,
+          state: form.state,
+          pincode: form.pincode,
+        },
 
-      userId: user.id,
+        total: Number(totalPrice),
 
-      customer: {
-        id: user.id,
-        name: form.name,
-        email: form.email,
+        payment,
+
+        items: cart.map((item) => ({
+          id: String(item.id),
+          name: item.name,
+          image: item.image,
+          category: item.category,
+          quantity: Number(item.quantity),
+          price: Number(item.price),
+        })),
+      };
+
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`${API_URL}/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to place order"
+        );
+      }
+
+      updateUser({
         phone: form.phone,
-        address: form.address,
-        city: form.city,
-        state: form.state,
-        pincode: form.pincode,
-      },
+        location: form.city,
+        orders: Number(user.orders || 0) + 1,
+        spent:
+          Number(user.spent || 0) + Number(totalPrice),
+      });
 
-      date: new Date().toISOString(),
+      clearCart();
 
-      status: "Pending",
+      navigate("/order-success", {
+        state: {
+          order: data.order,
+        },
+      });
+    } catch (error) {
+      console.error("Place order error:", error);
 
-      total: Number(totalPrice),
-
-      payment: payment,
-
-      items: cart.map((item) => ({
-        ...item,
-        quantity: Number(item.quantity),
-        price: Number(item.price),
-      })),
-    };
-
-    // =========================
-    // SAVE ORDER
-    // =========================
-
-    saveOrder(order);
-
-    // =========================
-    // UPDATE CUSTOMER DATA
-    // =========================
-
-    const previousOrders =
-      Number(user.orders || 0);
-
-    const previousSpent =
-      Number(user.spent || 0);
-
-    updateUser({
-      phone: form.phone,
-      location: form.city,
-      orders: previousOrders + 1,
-      spent:
-        previousSpent +
-        Number(totalPrice),
-    });
-
-    // =========================
-    // CLEAR CART
-    // =========================
-
-    clearCart();
-
-    // =========================
-    // SUCCESS PAGE
-    // =========================
-
-    navigate("/order-success", {
-      state: {
-        order,
-      },
-    });
+      alert(
+        error.message ||
+          "Something went wrong while placing your order."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // =========================
