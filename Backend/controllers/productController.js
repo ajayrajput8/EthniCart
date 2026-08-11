@@ -66,7 +66,6 @@ const getProducts = async (req, res) => {
       createdAt: -1,
     });
 
-    console.log("Fetched products:", products);
     const formattedProducts = products.map((product) => ({
       id: product._id,
       name: product.name,

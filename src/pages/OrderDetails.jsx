@@ -60,18 +60,31 @@ const OrderDetails = () => {
     loadOrder();
   }, [id]);
 
-  const loadOrder = () => {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+
+  const token = localStorage.getItem("token");
+
+  const loadOrder = async () => {
     try {
-      const savedOrders = JSON.parse(
-        localStorage.getItem("ethnicartOrders") || "[]"
+      const response = await fetch(
+        `${API_URL}/orders/${id}`, 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        }
       );
 
-      const foundOrder = savedOrders.find(
-        (item) => String(item.id) === String(id)
-      );
+      const data = await response.json();
 
-      setOrder(foundOrder || null);
-      setCancelled(foundOrder?.status === "Cancelled");
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to fetch order"
+        );
+      }
+
+      setOrder(data.order);
+      setCancelled(data.order.status === "Cancelled");
     } catch (error) {
       console.error("Failed to load order:", error);
       setOrder(null);
@@ -82,36 +95,32 @@ const OrderDetails = () => {
   // CANCEL ORDER
   // =====================================================
 
-  const handleCancelOrder = () => {
+  const handleCancelOrder = async () => {
     try {
-      const savedOrders = JSON.parse(
-        localStorage.getItem("ethnicartOrders") || "[]"
+      const response = await fetch(
+        `${API_URL}/orders/${id}/cancel`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        }
       );
 
-      const updatedOrders = savedOrders.map((item) =>
-        String(item.id) === String(id)
-          ? {
-              ...item,
-              status: "Cancelled",
-              cancelledAt: new Date().toISOString(),
-            }
-          : item
-      );
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to cancel order"
+        );
+      }
 
-      localStorage.setItem(
-        "ethnicartOrders",
-        JSON.stringify(updatedOrders)
-      );
-
-      const updatedOrder = updatedOrders.find(
-        (item) => String(item.id) === String(id)
-      );
-
-      setOrder(updatedOrder);
+      setOrder(data.order);
       setCancelled(true);
       setShowCancelConfirm(false);
     } catch (error) {
-      console.error("Failed to cancel order:", error);
+      console.error("Cancel order error:", error);
+      alert(error.message);
     }
   };
 
@@ -203,7 +212,7 @@ const OrderDetails = () => {
               </p>
 
               <span className="font-bold text-gray-900">
-                {order.id}
+                {order.orderId}
               </span>
 
               <span className="text-gray-300">
@@ -754,7 +763,7 @@ const OrderDetails = () => {
             <p className="text-gray-500 text-sm mt-2 leading-6">
               Are you sure you want to cancel order{" "}
               <span className="font-semibold text-gray-800">
-                {order.id}
+                {order.orderId}
               </span>
               ? This action cannot be undone.
             </p>

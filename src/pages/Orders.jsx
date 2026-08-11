@@ -12,42 +12,39 @@ const Orders = () => {
   // LOAD USER ORDERS
   // =====================================================
 
-  const loadOrders = () => {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+  const token = localStorage.getItem("token");
+
+  const loadOrders = async () => {
+    if (!user?.id) {
+      setOrders([]);
+      return;
+    }
+
     try {
-      const savedOrders = localStorage.getItem("ethnicartOrders");
-
-      if (!savedOrders) {
-        setOrders([]);
+      if (!token) {
+        console.error("Authentication token missing");
         return;
       }
 
-      const allOrders = JSON.parse(savedOrders);
-
-      if (!Array.isArray(allOrders)) {
-        setOrders([]);
-        return;
-      }
-
-      const userOrders = allOrders.filter((order) => {
-        const orderEmail = String(
-          order.customer?.email ||
-            order.customerEmail ||
-            order.email ||
-            ""
-        ).toLowerCase();
-
-        return (
-          orderEmail &&
-          orderEmail === String(user?.email || "").toLowerCase()
-        );
-      });
-
-      setOrders(
-        [...userOrders].sort(
-          (a, b) =>
-            new Date(b.date || 0) - new Date(a.date || 0)
-        )
+      const response = await fetch(
+        `${API_URL}/orders/user/${user.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to fetch orders"
+        );
+      }
+
+      setOrders(data.orders || []);
     } catch (error) {
       console.error("Failed to load orders:", error);
       setOrders([]);
@@ -66,7 +63,7 @@ const Orders = () => {
   // CANCEL ORDER
   // =====================================================
 
-  const handleCancelOrder = (orderId) => {
+  const handleCancelOrder = async (orderId) => {
     const confirmed = window.confirm(
       "Are you sure you want to cancel this order?"
     );
@@ -74,30 +71,34 @@ const Orders = () => {
     if (!confirmed) return;
 
     try {
-      const savedOrders =
-        localStorage.getItem("ethnicartOrders");
-
-      if (!savedOrders) return;
-
-      const allOrders = JSON.parse(savedOrders);
-
-      const updatedOrders = allOrders.map((order) =>
-        String(order.id) === String(orderId)
-          ? {
-              ...order,
-              status: "Cancelled",
-            }
-          : order
+      const response = await fetch(
+        `${API_URL}/orders/${orderId}/cancel`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        }
       );
 
-      localStorage.setItem(
-        "ethnicartOrders",
-        JSON.stringify(updatedOrders)
-      );
+      const data = await response.json();
 
-      loadOrders();
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to cancel order"
+        );
+      }
+
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.orderId === orderId
+            ? data.order
+            : order
+        )
+      );
     } catch (error) {
-      console.error("Failed to cancel order:", error);
+      console.error("Cancel order error:", error);
+      alert(error.message);
     }
   };
 
@@ -287,7 +288,7 @@ const Orders = () => {
 
               return (
                 <div
-                  key={order.id}
+                  key={order.orderId}
                   className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-gray-300 hover:shadow-sm transition"
                 >
 
@@ -305,7 +306,7 @@ const Orders = () => {
                         </span>
 
                         <span className="text-xs sm:text-sm font-bold text-gray-800">
-                          {order.id}
+                          {order.orderId}
                         </span>
                       </div>
 
@@ -448,7 +449,7 @@ const Orders = () => {
                       <div className="flex flex-wrap gap-2 lg:justify-end">
 
                         <Link
-                          to={`/orders/${order.id}`}
+                          to={`/orders/${order.orderId}`}
                           className="px-3 py-2 rounded-lg bg-gray-900 text-white text-xs sm:text-sm font-semibold hover:bg-gray-800 transition"
                         >
                           View Details
@@ -459,7 +460,7 @@ const Orders = () => {
                           status !==
                             "Delivered" && (
                             <Link
-                              to={`/orders/${order.id}`}
+                              to={`/orders/${order.orderId}`}
                               className="px-3 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-xs sm:text-sm font-semibold hover:bg-blue-100 transition"
                             >
                               🚚 Track
@@ -472,7 +473,7 @@ const Orders = () => {
                           <button
                             onClick={() =>
                               handleCancelOrder(
-                                order.id
+                                order.orderId
                               )
                             }
                             className="px-3 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 text-xs sm:text-sm font-semibold hover:bg-red-100 transition"

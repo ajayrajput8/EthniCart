@@ -30,8 +30,12 @@ export default function AdminLayout() {
   const [editProdFile, setEditProdFile] = useState(null);
   const [editProdPreview, setEditProdPreview] = useState("");
   const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const [showItemsModal, setShowItemsModal] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
+  const API_URL = "http://localhost:8000/api";
 
   //GET USERS FROM BACKEND
   useEffect(() => {
@@ -94,6 +98,7 @@ export default function AdminLayout() {
     fetchProducts();
   }, []);
 
+  console.log(products.length)
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     sessionStorage.setItem("adminActiveTab", tab);
@@ -105,8 +110,61 @@ export default function AdminLayout() {
     navigate("/");
   };
 
-  const handleOrderStatusChange = (orderId, newStatus) => {
-    setOrders(orders.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)));
+  const handleItemsInfo = (order) => {
+    setSelectedOrder(order);
+    setShowItemsModal(true);
+  };
+
+  const handleDeliveryInfo = (order) => {
+    setSelectedOrder(order);
+    setShowDeliveryModal(true);
+  };
+
+  const handleOrderStatusChange = async (
+    orderId,
+    newStatus
+  ) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        `${API_URL}/orders/${orderId}/status`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status: newStatus,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to update order status"
+        );
+      }
+
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.orderId === orderId
+            ? data.order
+            : order
+        )
+      );
+    } catch (error) {
+      console.error(
+        "Update order status error:",
+        error
+      );
+
+      alert(error.message);
+    }
   };
 
   const handleDeleteProduct = async (id) => {
@@ -142,7 +200,39 @@ export default function AdminLayout() {
       console.error("Delete product error:", error);
       alert(error.message);
     }
+  };  
+
+  const fetchOrders = async () => {
+    try {
+      /*const token = localStorage.getItem("token");
+      
+      if (!token) {
+        console.error("Admin token not found");
+        return;
+      }*/
+
+      const response = await fetch(
+        `${API_URL}/orders/admin`,
+      );
+
+      const data = await response.json();
+      console.log(data);
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to fetch orders"
+        );
+      }
+
+      setOrders(data.orders || []);
+    } catch (error) {
+      console.error("Fetch orders error:", error);
+    }
   };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   // Helper Function: Upload Image File to Cloudinary
   const uploadImageToCloudinary = async (file) => {
@@ -343,12 +433,72 @@ export default function AdminLayout() {
     }
   };
 
-  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0).toFixed(2);
+  const totalRevenue = orders
+    .filter((order) => order.status === "Delivered")
+    .reduce(
+      (sum, order) =>
+        sum + Number(order.total || 0),
+      0
+    )
+    .toFixed(2);
   const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
 
-  const monthlySales = 124500;
-  const weeklySales = 32400;
-  const yearlySales = 865900;
+  const validOrders = orders.filter(
+    (order) => order.status !== "Cancelled"
+  );
+
+  const total = validOrders
+    .reduce(
+      (sum, order) =>
+        sum + Number(order.total || 0),
+      0
+    )
+    .toFixed(2);
+
+  const now = new Date();
+
+  const monthlySales = validOrders
+    .filter((order) => {
+      const date = new Date(order.createdAt);
+
+      return (
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear()
+      );
+    })
+    .reduce(
+      (sum, order) =>
+        sum + Number(order.total || 0),
+      0
+    );
+
+  const weeklySales = validOrders
+    .filter((order) => {
+      const date = new Date(order.createdAt);
+
+      const diff =
+        (now - date) /
+        (1000 * 60 * 60 * 24);
+
+      return diff >= 0 && diff <= 7;
+    })
+    .reduce(
+      (sum, order) =>
+        sum + Number(order.total || 0),
+      0
+    );
+
+  const yearlySales = validOrders
+    .filter((order) => {
+      const date = new Date(order.createdAt);
+
+      return date.getFullYear() === now.getFullYear();
+    })
+    .reduce(
+      (sum, order) =>
+        sum + Number(order.total || 0),
+      0
+    );
 
   const topSellingProducts = [...products]
     .sort((a, b) => b.sales - a.sales)
@@ -358,27 +508,44 @@ export default function AdminLayout() {
 
   // ---------- WEEKLY ----------
   const weekData = Array(7).fill(0);
-  orders.forEach((order) => {
-    const orderDate = new Date(order.date);
-    const today = new Date();
-    const diff = (today - orderDate) / (1000 * 60 * 60 * 24);
-    if (diff <= 6) {
-      weekData[orderDate.getDay()] += order.total;
+
+  validOrders.forEach((order) => {
+    const orderDate = new Date(order.createdAt);
+
+    const diff =
+      (now - orderDate) /
+      (1000 * 60 * 60 * 24);
+
+    if (diff >= 0 && diff <= 7) {
+      weekData[orderDate.getDay()] +=
+        Number(order.total || 0);
     }
   });
 
-  // ---------- MONTHLY ----------
   const monthData = Array(12).fill(0);
-  orders.forEach((order) => {
-    const month = new Date(order.date).getMonth();
-    monthData[month] += order.total;
+
+  validOrders.forEach((order) => {
+    const orderDate = new Date(order.createdAt);
+
+    if (
+      orderDate.getFullYear() ===
+      now.getFullYear()
+    ) {
+      monthData[orderDate.getMonth()] +=
+        Number(order.total || 0);
+    }
   });
 
-  // ---------- YEARLY ----------
   const yearData = {};
-  orders.forEach((order) => {
-    const year = new Date(order.date).getFullYear();
-    yearData[year] = (yearData[year] || 0) + order.total;
+
+  validOrders.forEach((order) => {
+    const year = new Date(
+      order.createdAt
+    ).getFullYear();
+
+    yearData[year] =
+      (yearData[year] || 0) +
+      Number(order.total || 0);
   });
 
   return (
@@ -461,13 +628,13 @@ export default function AdminLayout() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               <StatCard title="Total Revenue" value={`${totalRevenue}₹`} trend="+14% this month" color="border-emerald-500" />
               <StatCard title="Total Orders" value={orders.length} trend="+5 new today" color="border-blue-500" />
-              <StatCard title="Total Products" value={products.length} trend={`${totalStock} items in stock`} color="border-amber-500" />
+              <StatCard title="Total Products" value={products.length} trend={`Check product page for more`} color="border-amber-500" />
               <StatCard title="Total Customers" value={customers.length} trend="+2 new this week" color="border-purple-500" />
              </div>
 
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Orders</h3>
-              <OrdersTable orders={orders.slice(0, 3)} onStatusChange={handleOrderStatusChange} />
+              <OrdersTable orders={orders.slice(0, 3)} onStatusChange={handleOrderStatusChange} onDeliveryInfo={handleDeliveryInfo} onItemsInfo={handleItemsInfo} />
             </div>
           </div>
         )}
@@ -478,7 +645,7 @@ export default function AdminLayout() {
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-800">All Store Orders</h3>
             </div>
-            <OrdersTable orders={orders} onStatusChange={handleOrderStatusChange} />
+            <OrdersTable orders={orders} onStatusChange={handleOrderStatusChange} onDeliveryInfo={handleDeliveryInfo} onItemsInfo={handleItemsInfo}/>
           </div>
         )}
 
@@ -944,14 +1111,6 @@ export default function AdminLayout() {
               </div>
             )}
 
-            <div className="bg-white p-6 rounded-xl shadow border">
-              <h2 className="text-lg font-semibold mb-3">Monthly Target</h2>
-              <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
-                <div className="w-3/4 h-full bg-green-500 rounded-full"></div>
-              </div>
-              <p className="mt-2 text-gray-500">75% of target achieved</p>
-            </div>
-
             <div className="bg-white rounded-xl shadow border p-6">
               <h2 className="text-lg font-semibold mb-4">Top Selling Products</h2>
               {topSellingProducts.map((item, index) => (
@@ -966,6 +1125,209 @@ export default function AdminLayout() {
               <h2 className="text-xl font-bold text-blue-700">Best Selling Product</h2>
               <p className="mt-3 text-lg font-semibold">{bestProduct?.name}</p>
               <p className="text-gray-600">{bestProduct?.sales} Units Sold</p>
+            </div>
+          </div>
+        )}
+
+        {showDeliveryModal && selectedOrder && (
+          <div
+            className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowDeliveryModal(false)}
+          >
+            <div
+              className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">
+                    Delivery Address
+                  </h2>
+
+                  <p className="text-xs text-gray-500 mt-1">
+                    Order #{selectedOrder.orderId}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowDeliveryModal(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-lg"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase">
+                    Customer
+                  </p>
+
+                  <p className="mt-1 font-semibold text-gray-900">
+                    {selectedOrder.customer?.name}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase">
+                    Phone
+                  </p>
+
+                  <p className="mt-1 text-gray-700">
+                    {selectedOrder.customer?.phone || "Not provided"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase">
+                    Address
+                  </p>
+
+                  <p className="mt-1 text-gray-700 leading-6">
+                    {selectedOrder.customer?.address}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase">
+                      City
+                    </p>
+
+                    <p className="mt-1 text-gray-700">
+                      {selectedOrder.customer?.city}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase">
+                      State
+                    </p>
+
+                    <p className="mt-1 text-gray-700">
+                      {selectedOrder.customer?.state}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase">
+                    Pincode
+                  </p>
+
+                  <p className="mt-1 text-gray-700">
+                    {selectedOrder.customer?.pincode}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowDeliveryModal(false)}
+                className="w-full mt-6 bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-lg font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+        {showItemsModal && selectedOrder && (
+          <div
+            className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowItemsModal(false)}
+          >
+            <div
+              className="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* HEADER */}
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">
+                    Ordered Products
+                  </h2>
+
+                  <p className="text-xs text-gray-500 mt-1">
+                    Order #{selectedOrder.orderId}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowItemsModal(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-lg"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* ITEMS */}
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                {selectedOrder.items?.length ? (
+                  selectedOrder.items.map((item, index) => (
+                    <div
+                      key={`${item.id}-${index}`}
+                      className="flex items-center justify-between gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {item.image && (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-14 h-14 rounded-lg object-cover border border-gray-200"
+                          />
+                        )}
+
+                        <div className="min-w-0">
+                          <p className="font-semibold text-gray-900 truncate">
+                            {item.name}
+                          </p>
+
+                          <p className="text-xs text-gray-500">
+                            ₹
+                            {Number(
+                              item.price || 0
+                            ).toLocaleString("en-IN")}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <p className="text-xs text-gray-500">
+                          Quantity
+                        </p>
+
+                        <p className="font-bold text-gray-900">
+                          × {item.quantity}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-gray-500 py-8">
+                    No products found.
+                  </p>
+                )}
+              </div>
+
+              {/* TOTAL */}
+              <div className="border-t border-gray-200 mt-5 pt-4 flex justify-between">
+                <span className="font-semibold text-gray-700">
+                  Order Total
+                </span>
+
+                <span className="font-bold text-gray-900">
+                  ₹
+                  {Number(
+                    selectedOrder.total || 0
+                  ).toLocaleString("en-IN")}
+                </span>
+              </div>
+
+              <button
+                onClick={() => setShowItemsModal(false)}
+                className="w-full mt-5 bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-lg font-medium"
+              >
+                Close
+              </button>
             </div>
           </div>
         )}
@@ -1008,46 +1370,195 @@ function StatCard({ title, value, trend, color, onClick }) {
   );
 }
 
-function OrdersTable({ orders, onStatusChange }) {
+function OrdersTable({ orders, onStatusChange, onDeliveryInfo, onItemsInfo,}) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
-      <table className="w-full text-left border-collapse min-w-[500px]">
+      <table className="w-full text-left border-collapse min-w-[800px]">
         <thead>
           <tr className="bg-gray-50 text-gray-600 text-xs font-semibold uppercase tracking-wider border-b border-gray-200">
-            <th className="py-3 px-4">Order ID</th>
-            <th className="py-3 px-4">Customer</th>
-            <th className="py-3 px-4">Date</th>
-            <th className="py-3 px-4">Total</th>
-            <th className="py-3 px-4">Status</th>
+            <th className="py-3 px-4">
+              Order ID
+            </th>
+
+            <th className="py-3 px-4">
+              Customer
+            </th>
+
+            <th className="py-3 px-4">
+              Date
+            </th>
+
+            <th className="py-3 px-4">
+              Items
+            </th>
+
+            <th className="py-3 px-4">
+              Payment
+            </th>
+
+            <th className="py-3 px-4">
+              Total
+            </th>
+
+            <th className="py-3 px-4">
+              Status
+            </th>
+
+            <th className="py-3 px-4 text-center">
+              Delivery
+            </th>
           </tr>
         </thead>
+
         <tbody className="divide-y divide-gray-100">
-          {orders.map((o) => (
-            <tr key={o.id} className="hover:bg-gray-50/50 transition-colors text-sm text-gray-700">
-              <td className="py-3.5 px-4 font-bold text-gray-900">{o.id}</td>
-              <td className="py-3.5 px-4">{o.customer}</td>
-              <td className="py-3.5 px-4 text-gray-500">{o.date}</td>
-              <td className="py-3.5 px-4 font-semibold text-gray-900">{o.total.toFixed(2)}₹</td>
-              <td className="py-3.5 px-4">
-                <select
-                  value={o.status}
-                  onChange={(e) => onStatusChange(o.id, e.target.value)}
-                  className={`text-xs font-medium px-2.5 py-1 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    o.status === "Delivered"
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : o.status === "Processing"
-                      ? "bg-amber-50 text-amber-700 border-amber-200"
-                      : "bg-gray-50 text-gray-700"
-                  }`}
-                >
-                  <option value="Pending">Pending</option>
-                  <option value="Processing">Processing</option>
-                  <option value="Shipped">Shipped</option>
-                  <option value="Delivered">Delivered</option>
-                </select>
+          {orders.length === 0 ? (
+            <tr>
+              <td
+                colSpan="7"
+                className="py-10 text-center text-gray-500"
+              >
+                No orders found.
               </td>
             </tr>
-          ))}
+          ) : (
+            orders.map((order) => (
+              <tr
+                key={order.orderId}
+                className="hover:bg-gray-50/50 transition-colors text-sm text-gray-700"
+              >
+                {/* ORDER ID */}
+                <td className="py-3.5 px-4 font-bold text-gray-900">
+                  {order.orderId}
+                </td>
+
+                {/* CUSTOMER */}
+                <td className="py-3.5 px-4">
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {order.customer?.name ||
+                        "Unknown"}
+                    </p>
+
+                    <p className="text-xs text-gray-500">
+                      {order.customer?.email ||
+                        ""}
+                    </p>
+                  </div>
+                </td>
+
+                {/* DATE */}
+                <td className="py-3.5 px-4 text-gray-500">
+                  {order.createdAt
+                    ? new Date(
+                        order.createdAt
+                      ).toLocaleDateString(
+                        "en-IN",
+                        {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        }
+                      )
+                    : "-"}
+                </td>
+
+                {/* ITEMS */}
+                <td className="py-3.5 px-4">
+                  <button
+                    onClick={() => onItemsInfo(order)}
+                    className="text-blue-600 hover:text-blue-800 hover:underline font-semibold"
+                    title="View ordered products"
+                  >
+                    {order.items?.reduce(
+                      (total, item) =>
+                        total + Number(item.quantity || 1),
+                      0
+                    ) || 0}
+                  </button>
+                </td>
+
+                {/* PAYMENT */}
+                <td className="py-3.5 px-4">
+                  <span
+                    className={`px-2 py-1 rounded-md text-xs font-medium ${
+                      order.payment === "online"
+                        ? "bg-blue-50 text-blue-700"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {order.payment === "online"
+                      ? "Online"
+                      : "COD"}
+                  </span>
+                </td>
+
+                {/* TOTAL */}
+                <td className="py-3.5 px-4 font-semibold text-gray-900">
+                  ₹
+                  {Number(
+                    order.total || 0
+                  ).toLocaleString("en-IN")}
+                </td>
+
+                {/* STATUS */}
+                <td className="py-3.5 px-4">
+                  <select
+                    value={order.status}
+                    onChange={(e) =>
+                      onStatusChange(
+                        order.orderId,
+                        e.target.value
+                      )
+                    }
+                    className={`text-xs font-medium px-2.5 py-1.5 rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      order.status === "Delivered"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : order.status === "Shipped"
+                        ? "bg-blue-50 text-blue-700 border-blue-200"
+                        : order.status === "Processing"
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : order.status === "Cancelled"
+                        ? "bg-red-50 text-red-700 border-red-200"
+                        : "bg-gray-50 text-gray-700 border-gray-300"
+                    }`}
+                  >
+                    <option value="Pending">
+                      Pending
+                    </option>
+
+                    <option value="Confirmed">
+                      Confirmed
+                    </option>
+
+                    <option value="Processing">
+                      Processing
+                    </option>
+
+                    <option value="Shipped">
+                      Shipped
+                    </option>
+
+                    <option value="Delivered">
+                      Delivered
+                    </option>
+
+                    <option value="Cancelled">
+                      Cancelled
+                    </option>
+                  </select>
+                </td>
+                <td className="py-3.5 px-4 text-center">
+                  <button
+                    onClick={() => onDeliveryInfo(order)}
+                    title="View delivery address"
+                    className="w-8 h-8 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold border border-blue-200 transition-colors"
+                  >
+                    i
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

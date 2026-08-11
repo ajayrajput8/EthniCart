@@ -1,48 +1,108 @@
 const mongoose = require("mongoose");
 
-const orderSchema = new mongoose.Schema(
+const orderItemSchema = new mongoose.Schema(
   {
+    id: {
+      type: String,
+      required: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    image: String,
+    category: String,
     price: {
       type: Number,
       required: true,
     },
-
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    quantity: {
+      type: Number,
       required: true,
+      min: 1,
     },
+  },
+  { _id: false }
+);
 
-    products: [
-      {
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
-          required: true,
-        },
-
-        quantity: {
-          type: Number,
-          required: true,
-          min: 1,
-        },
-      },
-    ],
-
-    location: {
+const orderSchema = new mongoose.Schema(
+  {
+    orderId: {
       type: String,
       required: true,
+      unique: true,
     },
 
-    date: {
-      type: Date,
-      default: Date.now,
+    userId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+
+    customer: {
+      id: String,
+      name: {
+        type: String,
+        required: true,
+      },
+      email: {
+        type: String,
+        required: true,
+      },
+      phone: {
+        type: String,
+        required: true,
+      },
+      address: {
+        type: String,
+        required: true,
+      },
+      city: {
+        type: String,
+        required: true,
+      },
+      state: {
+        type: String,
+        required: true,
+      },
+      pincode: {
+        type: String,
+        required: true,
+      },
+    },
+
+    items: {
+      type: [orderItemSchema],
+      required: true,
+    },
+
+    total: {
+      type: Number,
+      required: true,
+    },
+
+    payment: {
+      type: String,
+      enum: ["cod", "online"],
+      default: "cod",
     },
 
     status: {
       type: String,
-      enum: ["pending", "confirmed", "cancelled", "delivered"],
-      default: "pending",
+      enum: [
+        "Pending",
+        "Confirmed",
+        "Processing",
+        "Shipped",
+        "Delivered",
+        "Cancelled",
+      ],
+      default: "Pending",
+    },
+
+    cancelledAt: {
+      type: Date,
+      default: null,
     },
   },
   {
