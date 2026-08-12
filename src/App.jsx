@@ -23,6 +23,7 @@ import OrderDetails from "./pages/OrderDetails";
 import OrderSuccess from "./pages/OrderSuccess";
 import Addresses from "./pages/Addresses";
 import AccountSettings from "./pages/AccountSettings";
+import HelpSupport from "./pages/HelpSupport";
 
 // Profile
 import Profile from "./components/Home/Profile";
@@ -202,6 +203,7 @@ function App() {
         />
             <Route path="/addresses" element={<Addresses />} />
             <Route path="/account-settings" element={<AccountSettings />} />
+            <Route path="/help-support" element={<HelpSupport />} />
 
         {/* =========================
             FALLBACK

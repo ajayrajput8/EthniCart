@@ -487,10 +487,11 @@ const Profile = () => {
       type: "link",
     },
     {
-      title: "Help & Support",
-      description: "Get help with your EthniCart account",
-      icon: FiHelpCircle,
-      type: "disabled",
+       title: "Help & Support",
+       description: "Get help with your EthniCart account",
+       icon: FiHelpCircle,
+       link: "/help-support",
+       type: "link",
     },
   ];
 
