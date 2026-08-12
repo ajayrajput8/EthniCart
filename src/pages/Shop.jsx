@@ -7,7 +7,6 @@ import {
 } from "react-icons/fi";
 
 import ProductCard from "../components/Product/ProductCard";
-//import products from "../data/products";
 
 const API_URL = "http://localhost:8000/api";
 
@@ -16,7 +15,7 @@ const Shop = () => {
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("default");
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const categories = ["All", "Kurtas", "Sarees", "Lehengas"];
@@ -37,7 +36,7 @@ const Shop = () => {
         setProducts(data.products || []);
       } catch (error) {
         console.error("Product fetch error:", error);
-        setError(error.message);
+        setError(error.message || "Unable to load products.");
       } finally {
         setLoading(false);
       }
@@ -80,28 +79,57 @@ const Shop = () => {
     setSearch("");
   };
 
+  const hasFilters =
+    category !== "All" || search.trim() !== "" || sort !== "default";
+
+  // =====================================================
+  // LOADING
+  // =====================================================
+
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#faf9f7]">
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="flex flex-col items-center justify-center">
-            <div className="w-10 h-10 border-4 border-gray-200 border-t-[#C49A6C] rounded-full animate-spin" />
+      <main className="min-h-screen bg-[#FAF9F7]">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="animate-pulse">
+            <div className="h-3 w-24 bg-gray-200 rounded mb-4" />
+            <div className="h-10 w-32 bg-gray-200 rounded-lg mb-3" />
+            <div className="h-4 w-72 bg-gray-200 rounded mb-8" />
 
-            <p className="text-gray-500 mt-4 text-sm">
-              Loading products...
-            </p>
+            <div className="h-14 bg-white rounded-2xl border border-gray-100 mb-5" />
+
+            <div className="h-14 bg-white rounded-2xl border border-gray-100 mb-8" />
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+                <div
+                  key={item}
+                  className="bg-white rounded-2xl overflow-hidden"
+                >
+                  <div className="aspect-[4/5] bg-gray-200" />
+
+                  <div className="p-4">
+                    <div className="h-3 w-16 bg-gray-200 rounded mb-3" />
+                    <div className="h-4 w-4/5 bg-gray-200 rounded mb-3" />
+                    <div className="h-4 w-16 bg-gray-200 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       </main>
     );
   }
 
-  // API ERROR
+  // =====================================================
+  // ERROR
+  // =====================================================
+
   if (error) {
     return (
-      <main className="min-h-screen bg-[#faf9f7]">
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="bg-white border border-red-100 rounded-2xl sm:rounded-3xl py-16 px-5 text-center">
+      <main className="min-h-screen bg-[#FAF9F7]">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="max-w-md mx-auto bg-white border border-red-100 rounded-3xl p-10 text-center">
             <div className="w-14 h-14 mx-auto rounded-full bg-red-50 flex items-center justify-center">
               <FiX size={22} className="text-red-500" />
             </div>
@@ -117,18 +145,7 @@ const Shop = () => {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="
-                mt-6
-                bg-gray-900
-                hover:bg-[#C49A6C]
-                text-white
-                px-6
-                py-3
-                rounded-xl
-                text-sm
-                font-semibold
-                transition
-              "
+              className="mt-6 bg-gray-900 hover:bg-[#C49A6C] text-white px-6 py-3 rounded-xl text-sm font-semibold transition"
             >
               Try Again
             </button>
@@ -139,45 +156,47 @@ const Shop = () => {
   }
 
   return (
-    <main className="bg-[#FAF9F7] min-h-screen">
+    <main className="min-h-screen bg-[#FAF9F7]">
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7 sm:py-10">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
 
-        {/* PAGE HEADER */}
-        <div className="mb-7 sm:mb-9">
+        {/* =================================================
+            SIMPLE HEADER
+        ================================================= */}
 
-          <p className="text-[#C49A6C] uppercase tracking-[3px] text-xs sm:text-sm font-semibold">
-            EthniCart Collection
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-7 sm:mb-9">
 
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-
-            <div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mt-2">
-                Shop All Products
-              </h1>
-
-              <p className="text-gray-500 mt-2 text-sm sm:text-base">
-                Discover elegant ethnic styles for every occasion.
-              </p>
-            </div>
-
-            <p className="text-sm text-gray-500 shrink-0">
-              <span className="font-semibold text-gray-900">
-                {filteredProducts.length}
-              </span>{" "}
-              {filteredProducts.length === 1 ? "product" : "products"}
+          <div>
+            <p className="text-[#C49A6C] uppercase tracking-[2.5px] text-[10px] sm:text-xs font-bold mb-2">
+              EthniCart Collection
             </p>
 
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
+              Shop
+            </h1>
+
+            <p className="text-gray-500 text-sm sm:text-base mt-2">
+              Explore our latest ethnic collection.
+            </p>
           </div>
+
+          <p className="text-sm text-gray-500">
+            <span className="font-bold text-gray-900">
+              {filteredProducts.length}
+            </span>{" "}
+            {filteredProducts.length === 1 ? "Product" : "Products"}
+          </p>
 
         </div>
 
-        {/* SEARCH */}
-        <div className="relative mb-5 sm:mb-6">
+        {/* =================================================
+            SEARCH
+        ================================================= */}
+
+        <div className="relative mb-5">
 
           <FiSearch
-            size={19}
+            size={18}
             className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
           />
 
@@ -185,16 +204,16 @@ const Shop = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search kurtas, sarees, lehengas..."
+            placeholder="Search products..."
             className="
               w-full
+              h-14
               bg-white
               border
               border-gray-200
               rounded-2xl
               pl-11
-              pr-11
-              py-3.5
+              pr-12
               text-sm
               text-gray-900
               placeholder:text-gray-400
@@ -210,14 +229,13 @@ const Shop = () => {
             <button
               type="button"
               onClick={() => setSearch("")}
-              aria-label="Clear search"
               className="
                 absolute
                 right-3
                 top-1/2
                 -translate-y-1/2
-                w-8
-                h-8
+                w-9
+                h-9
                 rounded-full
                 flex
                 items-center
@@ -227,6 +245,7 @@ const Shop = () => {
                 hover:text-gray-700
                 transition
               "
+              aria-label="Clear search"
             >
               <FiX size={17} />
             </button>
@@ -234,148 +253,150 @@ const Shop = () => {
 
         </div>
 
-        {/* FILTER TOOLBAR */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-3 sm:p-4 mb-7 sm:mb-9">
+        {/* =================================================
+            CATEGORY + SORT
+        ================================================= */}
 
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
 
-            {/* CATEGORY */}
-            <div className="flex items-center gap-3 min-w-0">
+          {/* Categories */}
 
-              <div className="hidden sm:flex items-center gap-2 text-gray-500 shrink-0">
-                <FiSliders size={16} />
-                <span className="text-sm font-medium">
-                  Category
-                </span>
-              </div>
+          <div className="flex items-center gap-4 min-w-0">
 
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <div className="hidden md:flex items-center gap-2 text-gray-400 shrink-0">
+              <FiSliders size={15} />
 
-                {categories.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => setCategory(item)}
-                    className={`
-                      shrink-0
-                      px-4
-                      py-2.5
-                      rounded-xl
-                      text-sm
-                      font-semibold
-                      transition-all
-                      duration-200
-                      ${
-                        category === item
-                          ? "bg-gray-900 text-white"
-                          : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                      }
-                    `}
-                  >
-                    {item}
-                  </button>
-                ))}
-
-              </div>
-
+              <span className="text-xs font-semibold uppercase tracking-wider">
+                Category
+              </span>
             </div>
 
-            {/* SORT */}
-            <div className="relative shrink-0">
+            <div className="flex items-center gap-5 overflow-x-auto scrollbar-hide">
 
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                className="
-                  appearance-none
-                  w-full
-                  lg:w-56
-                  bg-gray-50
-                  border
-                  border-gray-200
-                  rounded-xl
-                  px-4
-                  py-3
-                  pr-10
-                  text-sm
-                  font-medium
-                  text-gray-700
-                  outline-none
-                  focus:border-gray-900
-                  cursor-pointer
-                "
-              >
-                <option value="default">
-                  Sort by: Featured
-                </option>
+              {categories.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setCategory(item)}
+                  className={`
+                    relative
+                    shrink-0
+                    pb-2
+                    text-sm
+                    font-semibold
+                    transition
+                    ${
+                      category === item
+                        ? "text-gray-900"
+                        : "text-gray-500 hover:text-gray-900"
+                    }
+                  `}
+                >
+                  {item}
 
-                <option value="low">
-                  Price: Low to High
-                </option>
-
-                <option value="high">
-                  Price: High to Low
-                </option>
-              </select>
-
-              <FiChevronDown
-                size={17}
-                className="
-                  absolute
-                  right-4
-                  top-1/2
-                  -translate-y-1/2
-                  text-gray-500
-                  pointer-events-none
-                "
-              />
+                  {category === item && (
+                    <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-[#C49A6C] rounded-full" />
+                  )}
+                </button>
+              ))}
 
             </div>
 
           </div>
 
+          {/* Sort */}
+
+          <div className="relative shrink-0">
+
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="
+                appearance-none
+                w-full
+                sm:w-48
+                h-11
+                bg-white
+                border
+                border-gray-200
+                rounded-xl
+                px-4
+                pr-10
+                text-sm
+                font-medium
+                text-gray-700
+                outline-none
+                focus:border-[#C49A6C]
+                cursor-pointer
+              "
+            >
+              <option value="default">
+                Sort: Featured
+              </option>
+
+              <option value="low">
+                Price: Low to High
+              </option>
+
+              <option value="high">
+                Price: High to Low
+              </option>
+            </select>
+
+            <FiChevronDown
+              size={16}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+            />
+
+          </div>
+
         </div>
 
-        {/* ACTIVE FILTER INFO */}
-        {(category !== "All" || search) && (
-          <div className="flex flex-wrap items-center gap-2 mb-6">
+        {/* =================================================
+            ACTIVE FILTERS
+        ================================================= */}
 
-            <span className="text-sm text-gray-500">
-              Showing:
-            </span>
+        {hasFilters && (
+          <div className="flex items-center justify-between gap-3 mb-6">
 
-            {category !== "All" && (
-              <span className="inline-flex items-center gap-2 bg-[#C49A6C]/10 text-[#9B7045] px-3 py-1.5 rounded-full text-xs font-semibold">
-                {category}
+            <div className="flex flex-wrap items-center gap-2">
 
-                <button
-                  type="button"
-                  onClick={() => setCategory("All")}
-                  aria-label="Remove category filter"
-                >
-                  <FiX size={13} />
-                </button>
-              </span>
-            )}
+              {category !== "All" && (
+                <span className="inline-flex items-center gap-1.5 bg-[#C49A6C]/10 text-[#9B7045] px-3 py-1.5 rounded-full text-xs font-semibold">
+                  {category}
 
-            {search && (
-              <span className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold">
-                "{search}"
+                  <button
+                    type="button"
+                    onClick={() => setCategory("All")}
+                    aria-label="Remove category"
+                  >
+                    <FiX size={12} />
+                  </button>
+                </span>
+              )}
 
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  aria-label="Remove search"
-                >
-                  <FiX size={13} />
-                </button>
-              </span>
-            )}
+              {search.trim() && (
+                <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs font-semibold max-w-[200px]">
+                  <span className="truncate">
+                    "{search.trim()}"
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    aria-label="Remove search"
+                  >
+                    <FiX size={12} />
+                  </button>
+                </span>
+              )}
+
+            </div>
 
             <button
               type="button"
               onClick={clearFilters}
-              className="text-xs font-semibold text-gray-500 hover:text-[#C49A6C] ml-1"
+              className="text-xs font-semibold text-gray-500 hover:text-[#C49A6C] whitespace-nowrap"
             >
               Clear all
             </button>
@@ -383,7 +404,10 @@ const Shop = () => {
           </div>
         )}
 
-        {/* PRODUCTS */}
+        {/* =================================================
+            PRODUCTS
+        ================================================= */}
+
         {filteredProducts.length > 0 ? (
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
@@ -399,14 +423,10 @@ const Shop = () => {
 
         ) : (
 
-          /* EMPTY STATE */
-          <div className="bg-white border border-gray-200 rounded-2xl sm:rounded-3xl py-16 sm:py-20 px-5 text-center">
+          <div className="bg-white border border-gray-200 rounded-3xl py-16 px-5 text-center">
 
             <div className="w-14 h-14 mx-auto rounded-full bg-gray-100 flex items-center justify-center">
-              <FiSearch
-                size={22}
-                className="text-gray-400"
-              />
+              <FiSearch size={22} className="text-gray-400" />
             </div>
 
             <h2 className="text-xl font-bold text-gray-900 mt-5">
@@ -414,8 +434,7 @@ const Shop = () => {
             </h2>
 
             <p className="text-gray-500 text-sm mt-2 max-w-sm mx-auto">
-              We couldn't find anything matching your search or selected
-              category.
+              Try changing your search or selected category.
             </p>
 
             <button
@@ -446,5 +465,4 @@ const Shop = () => {
     </main>
   );
 };
-
 export default Shop;

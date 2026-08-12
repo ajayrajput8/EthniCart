@@ -3,6 +3,7 @@ import {
   Routes,
   Route,
   Outlet,
+  Navigate,
 } from "react-router-dom";
 
 import Navbar from "./components/Layout/Navbar";
@@ -20,6 +21,8 @@ import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
 import OrderSuccess from "./pages/OrderSuccess";
+import Addresses from "./pages/Addresses";
+import AccountSettings from "./pages/AccountSettings";
 
 // Profile
 import Profile from "./components/Home/Profile";
@@ -55,7 +58,6 @@ const UserLayout = () => {
 function App() {
   return (
     <BrowserRouter>
-
       <Routes>
 
         {/* =========================
@@ -64,25 +66,16 @@ function App() {
 
         <Route element={<UserLayout />}>
 
-          {/* PUBLIC ROUTES */}
+          {/* PUBLIC */}
 
-          <Route
-            path="/"
-            element={<Home />}
-          />
+          <Route path="/" element={<Home />} />
 
-          <Route
-            path="/login"
-            element={<Login />}
-          />
+          <Route path="/login" element={<Login />} />
 
-          <Route
-            path="/register"
-            element={<Register />}
-          />
+          <Route path="/register" element={<Register />} />
 
           {/* =========================
-              PROTECTED ROUTES
+              PROTECTED USER ROUTES
           ========================= */}
 
           <Route
@@ -166,10 +159,32 @@ function App() {
             }
           />
 
+          {/* =========================
+              ACCOUNT PAGES
+          ========================= */}
+
+          <Route
+            path="/addresses"
+            element={
+              <ProtectedRoute>
+                <Addresses />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/account-settings"
+            element={
+              <ProtectedRoute>
+                <AccountSettings />
+              </ProtectedRoute>
+            }
+          />
+
         </Route>
 
         {/* =========================
-            ADMIN ROUTES
+            ADMIN
         ========================= */}
 
         <Route
@@ -185,9 +200,19 @@ function App() {
             </AdminProtectedRoute>
           }
         />
+            <Route path="/addresses" element={<Addresses />} />
+            <Route path="/account-settings" element={<AccountSettings />} />
+
+        {/* =========================
+            FALLBACK
+        ========================= */}
+
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
 
       </Routes>
-
     </BrowserRouter>
   );
 }

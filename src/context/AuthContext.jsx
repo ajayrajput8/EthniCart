@@ -1,8 +1,8 @@
 import { createContext, useState } from "react";
+
 export const AuthContext = createContext();
 
 const API_URL = "http://localhost:8000/api";
-
 
 const AuthProvider = ({ children }) => {
   // =========================
@@ -48,10 +48,8 @@ const AuthProvider = ({ children }) => {
         };
       }
 
-      // Save JWT
       localStorage.setItem("token", data.token);
 
-      // Save logged-in user
       localStorage.setItem(
         "ethnicartUser",
         JSON.stringify(data.user)
@@ -78,125 +76,174 @@ const AuthProvider = ({ children }) => {
   // LOGIN
   // =========================
   const login = async (phone, password) => {
-      try {
-        const response = await fetch(`${API_URL}/users/login`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            phone,
-            password,
-          }),
-        });
+    try {
+      const response = await fetch(`${API_URL}/users/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone,
+          password,
+        }),
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (!response.ok) {
-          return {
-            success: false,
-            message: data.message || "Invalid phone or password.",
-          };
-        }
-
-        // Save JWT
-        localStorage.setItem("token", data.token);
-
-        // Save user
-        localStorage.setItem(
-          "ethnicartUser",
-          JSON.stringify(data.user)
-        );
-
-        setUser(data.user);
-
-        return {
-          success: true,
-          user: data.user,
-          token: data.token,
-        };
-      } catch (error) {
-        console.error("Login error:", error);
-
+      if (!response.ok) {
         return {
           success: false,
-          message: "Unable to connect to server.",
+          message: data.message || "Invalid phone or password.",
         };
       }
-    };
 
-    // =========================
-    // LOGOUT
-    // =========================
-    const logout = () => {
-      localStorage.removeItem("token");
-      localStorage.removeItem("ethnicartUser");
+      localStorage.setItem("token", data.token);
 
-      setUser(null);
-    };
+      localStorage.setItem(
+        "ethnicartUser",
+        JSON.stringify(data.user)
+      );
 
-    // =========================
-    // UPDATE USER
-    // =========================
-    const updateUser = async (updatedData) => {
-      try {
-        const token = localStorage.getItem("token");
+      setUser(data.user);
 
-        const response = await fetch(`${API_URL}/users/edit`, {
+      return {
+        success: true,
+        user: data.user,
+        token: data.token,
+      };
+    } catch (error) {
+      console.error("Login error:", error);
+
+      return {
+        success: false,
+        message: "Unable to connect to server.",
+      };
+    }
+  };
+
+  // =========================
+  // LOGOUT
+  // =========================
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("ethnicartUser");
+
+    setUser(null);
+  };
+
+  // =========================
+  // UPDATE USER
+  // =========================
+  const updateUser = async (updatedData) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`${API_URL}/users/edit`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || "Failed to update user.",
+        };
+      }
+
+      localStorage.setItem(
+        "ethnicartUser",
+        JSON.stringify(data.user)
+      );
+
+      setUser(data.user);
+
+      return {
+        success: true,
+        user: data.user,
+      };
+    } catch (error) {
+      console.error("Update user error:", error);
+
+      return {
+        success: false,
+        message: "Unable to connect to server.",
+      };
+    }
+  };
+
+  // =========================
+  // CHANGE PASSWORD
+  // =========================
+  const changePassword = async (
+    currentPassword,
+    newPassword
+  ) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        `${API_URL}/users/change-password`,
+        {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(updatedData),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          return {
-            success: false,
-            message: data.message || "Failed to update user.",
-          };
+          body: JSON.stringify({
+            currentPassword,
+            newPassword,
+          }),
         }
+      );
 
-        localStorage.setItem(
-          "ethnicartUser",
-          JSON.stringify(data.user)
-        );
+      const data = await response.json();
 
-        setUser(data.user);
-
-        return {
-          success: true,
-          user: data.user,
-        };
-      } catch (error) {
-        console.error("Update user error:", error);
-
+      if (!response.ok) {
         return {
           success: false,
-          message: "Unable to connect to server.",
+          message:
+            data.message || "Failed to change password.",
         };
       }
-    };
 
-    // =========================
-    // PROVIDER
-    // =========================
-    return (
-      <AuthContext.Provider
-        value={{
-          user,
-          register,
-          login,
-          logout,
-          updateUser,
-        }}
-      >
-        {children}
-      </AuthContext.Provider>
-    );
+      return {
+        success: true,
+        message:
+          data.message || "Password changed successfully.",
+      };
+    } catch (error) {
+      console.error("Change password error:", error);
+
+      return {
+        success: false,
+        message: "Unable to connect to server.",
+      };
+    }
   };
 
-  export default AuthProvider;
+  // =========================
+  // PROVIDER
+  // =========================
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        register,
+        login,
+        logout,
+        updateUser,
+        changePassword,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export default AuthProvider;
