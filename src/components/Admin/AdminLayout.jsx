@@ -35,7 +35,7 @@ export default function AdminLayout() {
   const [showItemsModal, setShowItemsModal] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
-  const API_URL = "http://localhost:8000/api";
+  const API_URL = "https://ethnicart.onrender.com/api";
 
   //GET USERS FROM BACKEND
   useEffect(() => {
@@ -51,7 +51,7 @@ export default function AdminLayout() {
         }*/
 
         const response = await fetch(
-          "http://localhost:8000/api/users",
+          "https://ethnicart.onrender.com/api/users",
           {
             method: "GET",
             headers: {
@@ -82,7 +82,7 @@ export default function AdminLayout() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/products");
+        const response = await fetch("https://ethnicart.onrender.com/api/products");
 
         const data = await response.json();
 
@@ -176,7 +176,7 @@ export default function AdminLayout() {
 
     try {
       const response = await fetch(
-        `${"http://localhost:8000/api/products"}/${id}`,
+        `${"https://ethnicart.onrender.com/api/products"}/${id}`,
         {
           method: "DELETE",
         }
@@ -396,7 +396,7 @@ export default function AdminLayout() {
       }
 
       const response = await fetch(
-        `${"http://localhost:8000/api/products"}/${editingProd.id}`,
+        `${"https://ethnicart.onrender.com/api/products"}/${editingProd.id}`,
         {
           method: "PUT",
           body: formData,

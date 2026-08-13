@@ -331,7 +331,7 @@ const Profile = () => {
       }
 
       const response = await fetch(
-        "http://localhost:8000/api/users/change-password",
+        "https://ethnicart.onrender.com/api/users/change-password",
         {
           method: "PUT",
           headers: {

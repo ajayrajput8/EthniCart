@@ -19,7 +19,7 @@ import { CartContext } from "../context/CartContext";
 import { WishlistContext } from "../context/WishlistContext";
 import { AuthContext } from "../context/AuthContext";
 
-const API_URL = "http://localhost:8000/api";
+const API_URL = "https://ethnicart.onrender.com/api";
 
 const Product = () => {
   const { id } = useParams();

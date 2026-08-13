@@ -3,7 +3,7 @@ import { FiArrowUpRight } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import ProductCard from "../Product/ProductCard";
 
-const API_URL = "http://localhost:8000/api";
+const API_URL = "https://ethnicart.onrender.com/api";
 
 const FeaturedProducts = () => {
   const [products, setProducts] = useState([]); 

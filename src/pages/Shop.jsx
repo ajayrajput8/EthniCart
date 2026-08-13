@@ -8,7 +8,7 @@ import {
 
 import ProductCard from "../components/Product/ProductCard";
 
-const API_URL = "http://localhost:8000/api";
+const API_URL = "https://ethnicart.onrender.com/api";
 
 const Shop = () => {
   const [products, setProducts] = useState([]);

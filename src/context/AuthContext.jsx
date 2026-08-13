@@ -2,7 +2,7 @@ import { createContext, useState } from "react";
 
 export const AuthContext = createContext();
 
-const API_URL = "http://localhost:8000/api";
+const API_URL = "https://ethnicart.onrender.com/api";
 
 const AuthProvider = ({ children }) => {
   // =========================
