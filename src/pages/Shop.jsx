@@ -8,7 +8,7 @@ import {
 
 import ProductCard from "../components/Product/ProductCard";
 
-const API_URL = "https://ethnicart.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
@@ -179,14 +179,6 @@ const Shop = () => {
               Explore our latest ethnic collection.
             </p>
           </div>
-
-          <p className="text-sm text-gray-500">
-            <span className="font-bold text-gray-900">
-              {filteredProducts.length}
-            </span>{" "}
-            {filteredProducts.length === 1 ? "Product" : "Products"}
-          </p>
-
         </div>
 
         {/* =================================================

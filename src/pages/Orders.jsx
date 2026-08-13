@@ -12,7 +12,7 @@ const Orders = () => {
   // LOAD USER ORDERS
   // =====================================================
 
-  const API_URL = import.meta.env.VITE_API_URL || "https://ethnicart.onrender.com/api";
+  const API_URL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
 
   const loadOrders = async () => {
@@ -318,17 +318,14 @@ const Orders = () => {
                         </span>
 
                         <span className="text-xs sm:text-sm text-gray-600">
-                          {order.date
-                            ? new Date(
-                                order.date
-                              ).toLocaleDateString(
-                                "en-IN",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                }
-                              )
+                          {order.createdAt
+                            ? new Date(order.createdAt).toLocaleString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
                             : "N/A"}
                         </span>
                       </div>
@@ -463,7 +460,7 @@ const Orders = () => {
                               to={`/orders/${order.orderId}`}
                               className="px-3 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-xs sm:text-sm font-semibold hover:bg-blue-100 transition"
                             >
-                              🚚 Track
+                             Track
                             </Link>
                           )}
 

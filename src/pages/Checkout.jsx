@@ -20,8 +20,6 @@ import {
 import { CartContext } from "../context/CartContext";
 import { AuthContext } from "../context/AuthContext";
 
-const API_URL = "https://ethnicart.onrender.com/api";
-
 const Checkout = () => {
   const {
     cart,
@@ -35,6 +33,7 @@ const Checkout = () => {
 
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_API_URL;
   // =========================
   // DELIVERY FORM
   // =========================

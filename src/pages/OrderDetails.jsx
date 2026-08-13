@@ -45,6 +45,8 @@ const STATUS_ORDER = [
   "Delivered",
 ];
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const OrderDetails = () => {
   const { id } = useParams();
 
@@ -59,8 +61,6 @@ const OrderDetails = () => {
   useEffect(() => {
     loadOrder();
   }, [id]);
-
-  const API_URL = "https://ethnicart.onrender.com/api";
 
   const token = localStorage.getItem("token");
 
@@ -220,11 +220,15 @@ const OrderDetails = () => {
               </span>
 
               <span className="text-sm text-gray-500">
-                {order.date
-                  ? new Date(order.date).toLocaleString(
-                      "en-IN"
-                    )
-                  : "Date unavailable"}
+                {order.createdAt
+                ? new Date(order.createdAt).toLocaleString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "N/A"}
               </span>
             </div>
           </div>

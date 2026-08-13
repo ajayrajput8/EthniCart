@@ -35,6 +35,19 @@ const CartProvider = ({ children }) => {
     }
   };
 
+  const increaseQuantity = (id) => {
+    setCart(
+      cart.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              quantity: item.quantity + 1,
+            }
+          : item
+      )
+    );
+  };
+
   // =========================
   // DECREASE QUANTITY
   // =========================
@@ -92,6 +105,7 @@ const CartProvider = ({ children }) => {
         cart,
         addToCart,
         decreaseQuantity,
+        increaseQuantity,
         removeFromCart,
         clearCart,
         saveOrder,
