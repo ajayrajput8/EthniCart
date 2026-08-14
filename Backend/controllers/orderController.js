@@ -13,6 +13,7 @@ const createOrder = async (req, res) => {
       payment,
     } = req.body;
 
+    
     if (
       !userId ||
       !customer ||
@@ -30,8 +31,6 @@ const createOrder = async (req, res) => {
     for (const item of items) {
       const productId = item.id;
       const quantity = Number(item.quantity);
-
-      
 
       if (!productId || !quantity || quantity <= 0) {
         await session.abortTransaction();
@@ -149,8 +148,10 @@ const getOrderById = async (req, res) => {
 
 const cancelOrder = async (req, res) => {
   const session = await mongoose.startSession();
-
+  
   try {
+    session.startTransaction();
+    
     const order = await Order.findOne({
       orderId: req.params.id,
     }).session(session);
@@ -204,14 +205,18 @@ const cancelOrder = async (req, res) => {
       order,
     });
   } catch (error) {
-    await session.abortTransaction();
-
     console.error("Cancel order error:", error);
+
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
 
     res.status(500).json({
       success: false,
       message: "Failed to cancel order",
     });
+  } finally {
+    await session.endSession();
   }
 };
 

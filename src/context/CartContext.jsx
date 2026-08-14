@@ -1,9 +1,36 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
 
 export const CartContext = createContext();
 
 const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
+  const [cartLoading, setCartLoading] = useState(true);
+
+  useEffect(() => {
+    try {
+      setCartLoading(true);
+
+      const savedCart = JSON.parse(
+        localStorage.getItem("ethnicartCart") || "[]"
+      );
+
+      setCart(Array.isArray(savedCart) ? savedCart : []);
+    } catch (error) {
+      console.error("Failed to load cart:", error);
+      setCart([]);
+    } finally {
+      setCartLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!cartLoading) {
+      localStorage.setItem(
+        "ethnicartCart",
+        JSON.stringify(cart)
+      );
+    }
+  }, [cart, cartLoading]);
 
   // =========================
   // ADD TO CART
@@ -103,6 +130,7 @@ const CartProvider = ({ children }) => {
     <CartContext.Provider
       value={{
         cart,
+        cartLoading,
         addToCart,
         decreaseQuantity,
         increaseQuantity,
